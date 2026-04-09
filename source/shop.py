@@ -224,8 +224,9 @@ def browse(step=128, adj=0, dur=0.3, pr_end=True):
         win_click(1229, 480)
 
 def close_panel():
+    if now.button(p.SUPER): return
     gui.press("esc")
-    while not wait_while_condition(lambda: not now.button(p.SUPER), timer=1.5):
+    if not wait_while_condition(lambda: not now.button(p.SUPER), timer=1.5):
         gui.press("esc")
     time.sleep(0.1)
     x, y = win_get_position()
@@ -243,7 +244,7 @@ def concat(dict1, dict2):
 def get_inventory():
     uptie = None
     while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
-        print("scroll down for inventory click alignment")
+        print("scroll down for inventory alignment")
         browse(step=300, dur=0.1, pr_end=False)
         time.sleep(0.5)
 
@@ -443,6 +444,11 @@ def get_fuse_list():
 
 def handle_available_fusion():
     print("checking available fusion...")
+    while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+        print("scroll up for alignment")
+        browse(step=-300, dur=0.05, pr_end=False)
+        time.sleep(0.5)
+
     if not now_rgb.button("fusion_available"):
         return now_rgb.button("scroll", "scroll_full")
     

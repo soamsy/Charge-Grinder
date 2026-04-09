@@ -268,7 +268,7 @@ def export_to_csv(data, filename):
 
 def _is_onefile_temp_path(path):
     normalized = os.path.normcase(os.path.abspath(path))
-    return ("\\appdata\\local\\temp\\onefil" in normalized) or ("\\appdata\\local\\temp\\_mei" in normalized)
+    return "\\appdata\\local\\temp\\onefil" in normalized
 
 
 def _launched_executable_dir():
@@ -291,8 +291,6 @@ def log_to_csv():
     appimage_path = os.environ.get("APPIMAGE")
     if appimage_path:
         base_path = os.path.dirname(appimage_path)
-    elif hasattr(sys, "_MEIPASS"):
-        base_path = _launched_executable_dir()
     elif "__compiled__" in globals():
         base_path = _launched_executable_dir()
     else:

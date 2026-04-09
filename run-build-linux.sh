@@ -24,7 +24,7 @@ fi
 echo "=== Step 1: Building Docker image ==="
 docker build -t cgrinder-builder -f "$ROOT_DIR/release/linux/docker-linux.Dockerfile" "$ROOT_DIR"
 
-echo "=== Step 2: Running PyInstaller inside Docker ==="
+echo "=== Step 2: Running Nuitka build inside Docker ==="
 docker run --rm \
   -v "$DOCKER_OUTDIR":/output \
   -e INSIDE_DOCKER=1 \

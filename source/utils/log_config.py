@@ -3,7 +3,7 @@ import logging, sys, os
 
 def _is_onefile_temp_path(path: str) -> bool:
     normalized = os.path.normcase(os.path.abspath(path))
-    return ("\\appdata\\local\\temp\\onefil" in normalized) or ("\\appdata\\local\\temp\\_mei" in normalized)
+    return "\\appdata\\local\\temp\\onefil" in normalized
 
 
 def _launched_executable_dir():
@@ -26,9 +26,6 @@ def _runtime_base_path():
     appimage_path = os.environ.get("APPIMAGE")
     if appimage_path:
         return os.path.dirname(appimage_path)
-
-    if hasattr(sys, "_MEIPASS"):
-        return _launched_executable_dir()
 
     # Nuitka sets __compiled__ for compiled modules.
     if "__compiled__" in globals():

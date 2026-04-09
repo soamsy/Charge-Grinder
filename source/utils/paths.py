@@ -1,9 +1,16 @@
 import os, sys, platform
 
-if hasattr(sys, "_MEIPASS"):
-    BASE_PATH = sys._MEIPASS
-else:
-    BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+def _runtime_base_path():
+    # For compiled binaries, keep asset lookup relative to the executable folder.
+    if "__compiled__" in globals():
+        exe_path = os.path.abspath(sys.executable)
+        return os.path.dirname(exe_path)
+
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+
+BASE_PATH = _runtime_base_path()
 
 
 ASSETS_DIR = os.path.join(BASE_PATH,"ImageAssets/UI")
@@ -102,8 +109,8 @@ REG = {
     "Confirm.1"      : (1118,  754,  189,   70),
     "trials"         : (   0,  615, 1920,   55),
     "buffs"          : (   0,  664, 1920,   52),
-    "adversity"      : ( 100,   58,  320,   70),
-    "projection"     : ( 153,  713, 1620,  100),
+    "adversity"      : (  50,   58,  320,   70),
+    "projection"     : (   0,  713, 1920,  100),
     "selectCount"    : (1790,  843,   30,   45),
     # regions not binded to an image
     "rewardCount!"   : (1494,  181,   23,   42),
