@@ -8,7 +8,7 @@ LEGACY_DRIVER_PATHS = [
 ]
 
 
-DISCORD_URL = os.environ.get("CHARGEGRINDER_DISCORD_URL", "https://discord.gg/zQ9AnUkf")
+DISCORD_URL = os.environ.get("CHARGEGRINDER_DISCORD_URL", "https://discord.gg/SSjpXbapKY")
 CONTACT = "@walpth"
 
 
