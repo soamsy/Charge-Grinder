@@ -71,6 +71,8 @@ def _get_window_title(win):
 
 def getActiveWindowTitle():
     """Return active window title, or empty string if none."""
+    if not FAILSAFE_ENABLED:
+        return "LimbusCompany"
     try:
         atom_net_active = _disp.intern_atom('_NET_ACTIVE_WINDOW')
         prop = _root.get_full_property(atom_net_active, X.AnyPropertyType)
@@ -951,6 +953,7 @@ def press(keys, presses=1, interval=0.1, delay=0.09):
 
         ecodes = []
         for key in keys:
+            # print(f"Pressing key: {key}")
             _fail_safe_check()
             kc = _key_to_ecode(key)
             if not kc:

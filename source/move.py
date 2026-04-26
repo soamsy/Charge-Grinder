@@ -88,7 +88,7 @@ def directions(is_aligned=True):
     dir_reg = "directions_init" if not is_aligned else "directions"
     reg_xy = (624, 101) if is_aligned else (914, 0)
     for i, suffix in options.items():
-        if now.button(suffix, dir_reg, conf=0.85):
+        if now.button(suffix, dir_reg, conf=0.8):
             regions[i] = (reg_xy[0], reg_xy[1] + i * 275, 282, 275)
     return regions
 
@@ -259,9 +259,10 @@ def move():
         _loc = LocatePreset(image=screenshot(region=region), v_comp=v_list[region_idx], conf=0.8, wait=False)
         name = get_node_name(_loc, region)
         gui.press(keys_map.get(region_idx, "d"))
-        enter()
-        logging.info(f"Entering {name} {'fight'*(name!='Event' and name!='Shop')}")
-        return True
+        if enter():
+            logging.info(f"Entering {name} {'fight'*(name!='Event' and name!='Shop')}")
+            return True
+        return False
     elif all(k in regions for k in (0, 2)):
         position()
     else:
