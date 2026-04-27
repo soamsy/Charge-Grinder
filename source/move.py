@@ -80,7 +80,7 @@ def directions(is_aligned=True):
     dir_reg = "directions_init" if not is_aligned else "directions"
     reg_xy = (624, 101) if is_aligned else (914, 0)
     for i, suffix in options.items():
-        if now.button(suffix, dir_reg, conf=0.8):
+        if now.button(suffix, dir_reg, conf=0.85):
             regions[i] = (reg_xy[0], reg_xy[1] + i * 275, 282, 275)
     return regions
 
@@ -168,7 +168,7 @@ def next_step(nodes, extra_connections):
     return best_idx, nodes[0][best_idx]
 
 
-def enter(wait=1):
+def enter(wait=1.2):
     if now.button("enter", wait=wait):
         gui.press("space")
         connection()
