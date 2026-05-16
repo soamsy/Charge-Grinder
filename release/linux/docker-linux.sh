@@ -23,8 +23,8 @@ if [ "$INSIDE_DOCKER" = "1" ]; then
       --output-filename=app \
       --include-data-dir="$ROOT_DIR/ImageAssets/UI"=ImageAssets/UI \
       --include-data-dir="$ROOT_DIR/ImageAssets/AppUI"=ImageAssets/AppUI \
-      --include-data-files="$ROOT_DIR/app.png"=app.png \
-      --include-data-files="$ROOT_DIR/source/utils/version"=source/utils/version \
+      --include-data-files="$ROOT_DIR/ImageAssets/app.png"=ImageAssets/app.png \
+      --include-data-files="$ROOT_DIR/version"=version \
       --include-data-files="$ROOT_DIR/source/utils/movement/model.npz"=move_assets/model.npz \
       "$ROOT_DIR/App.py"
 

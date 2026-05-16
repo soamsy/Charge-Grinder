@@ -5,7 +5,7 @@ import sys
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ENTRY = os.path.join(ROOT_DIR, "App.py")
-VERSION_FILE = os.path.join(ROOT_DIR, "source", "utils", "version")
+VERSION_FILE = os.path.join(ROOT_DIR, "version")
 
 
 def _read_app_version(default: str = "0.0.0") -> str:
@@ -50,11 +50,11 @@ def _cmd(output_name: str, console_mode: str):
         f"--output-dir={os.path.join(ROOT_DIR, 'build')}",
         f"--output-filename={output_name}",
         f"--windows-console-mode={console_mode}",
-        f"--windows-icon-from-ico={os.path.join(ROOT_DIR, 'app_icon.ico')}",
+        f"--windows-icon-from-ico={os.path.join(ROOT_DIR, 'ImageAssets', 'app_icon.ico')}",
         f"--include-data-dir={os.path.join(ROOT_DIR, 'ImageAssets', 'UI')}=ImageAssets/UI",
         f"--include-data-dir={os.path.join(ROOT_DIR, 'ImageAssets', 'AppUI')}=ImageAssets/AppUI",
-        f"--include-data-files={os.path.join(ROOT_DIR, 'app_icon.ico')}=app_icon.ico",
-        f"--include-data-files={VERSION_FILE}=source/utils/version",
+        f"--include-data-files={os.path.join(ROOT_DIR, 'ImageAssets', 'app_icon.ico')}=ImageAssets/app_icon.ico",
+        f"--include-data-files={VERSION_FILE}=version",
         f"--include-data-files={os.path.join(ROOT_DIR, 'source', 'utils', 'bridge', 'bridge.dll')}=move_assets/bridge.dll",
         f"--include-data-files={os.path.join(ROOT_DIR, 'source', 'utils', 'movement', 'model.npz')}=move_assets/model.npz",
         "--nofollow-import-to=source.utils.os_x11_backend",

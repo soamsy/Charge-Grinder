@@ -12,7 +12,7 @@ def _runtime_base_path():
 
 BASE_PATH = _runtime_base_path()
 
-VERSION_FILE = os.path.join(BASE_PATH, "source", "utils", "version")
+VERSION_FILE = os.path.join(BASE_PATH, "version")
 
 
 def _read_app_version(default="0.0.0"):
@@ -47,9 +47,9 @@ APP_DIR = os.path.join(BASE_PATH,"ImageAssets/AppUI")
 APP_PTH = collect_png_paths(APP_DIR)
 
 if platform.system() == "Windows":
-    ICON = os.path.join(BASE_PATH,"app_icon.ico")
+    ICON = os.path.join(BASE_PATH,"ImageAssets","app_icon.ico")
 else:
-    ICON = os.path.join(BASE_PATH,"app.png")
+    ICON = os.path.join(BASE_PATH,"ImageAssets","app.png")
 
 # regions for some buttons
 REG = {
