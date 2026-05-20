@@ -5,15 +5,13 @@ import numpy as np
 
 
 _POINTER_STATE = {
-    "scale": 1.0,
-    "alpha": 0.9
+    "scale": 1.0
 }
 
 
 def update_pointer_scale(accumulated_raw, start_pos, current_pos):
     actual_delta = np.asarray(current_pos, dtype=float) - np.asarray(start_pos, dtype=float)
     raw_delta = np.asarray(accumulated_raw, dtype=float)
-    alpha = float(_POINTER_STATE["alpha"])
     raw_norm_sq = float(np.dot(raw_delta, raw_delta))
 
     if raw_norm_sq <= 225.0:
@@ -34,11 +32,7 @@ def update_pointer_scale(accumulated_raw, start_pos, current_pos):
     if abs(observed_scale - current_scale) <= 0.03:
         return
 
-    print(f"Pointer speed detected: {observed_scale}")
-    _POINTER_STATE["scale"] = (
-        (1.0 - alpha) * current_scale +
-        alpha * observed_scale
-    )
+    _POINTER_STATE["scale"] = observed_scale    
     print(f"Adjusting pointer scale to: {_POINTER_STATE['scale']}")
 
 
