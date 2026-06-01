@@ -9,13 +9,13 @@ from source_app.params import CACHE
 class CacheWorker(QObject):
     finished = pyqtSignal()
 
-    def __init__(self, teams, settings, hard):
+    def __init__(self, teams, settings, hard_state):
         super().__init__()
-        names = self.get_gifts(teams, settings, hard)
+        names = self.get_gifts(teams, settings, hard_state)
         self.paths = [(PTH[name], name) for name in names]
 
-    def get_gifts(self, teams, settings, hard):
-        team_list = HARD if hard else TEAMS
+    def get_gifts(self, teams, settings, hard_state):
+        team_list = HARD if hard_state == 1 or hard_state == 2 else TEAMS
         affinities = {x for team in teams for x in teams[team]["affinity"]}
         gifts = {item for i in affinities for item in list(team_list.values())[i]["all"]}
         keywordless = list(settings['keywordless'].keys())

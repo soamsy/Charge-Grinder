@@ -1,5 +1,5 @@
 from source.utils.utils import *
-
+from source_app.utils import *
 
 def within_region(x, regions):
     for i, region in enumerate(regions):
@@ -12,22 +12,26 @@ def within_region(x, regions):
 
 def remove_pack(level, name):
     for l in range(level, 6 + p.EXTREME*10):
-        if name in p.PICK[f"floor{l}"]:
-            p.PICK[f"floor{l}"].remove(name)
+        if name in p.PICK_NORMAL[f"floor{l}"]:
+            p.PICK_NORMAL[f"floor{l}"].remove(name)
+        if name in p.PICK_NORMAL[f"floor{l}"]:
+            p.PICK_HARD[f"floor{l}"].remove(name)
 
 
-def pack_eval(level, regions, skip, skips):
+def pack_eval(regions, skip, skips):
     # best packs
-    priority = p.PICK[f"floor{level}"]
-    print(priority)
+    priority = p.PICK_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.PICK_NORMAL[f"floor{p.LVL}"]
+    print("priority ", end="")
+    pprint(priority)
     logging.info(f"Pick: {priority}")
 
     # worst packs (suboptimal time)
-    banned = p.IGNORE[f"floor{level}"]
-    print(banned)
+    banned = p.IGNORE_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.IGNORE_NORMAL[f"floor{p.LVL}"]
+    print("banned ", end="")
+    pprint(banned)
     logging.info(f"Ignore: {banned}")
 
-    pack_list = HARD_FLOORS[format_lvl(level)] if p.HARD else FLOORS[format_lvl(level)]
+    pack_list = HARD_FLOORS[format_lvl(p.LVL)] if p.is_on_hard() else FLOORS[format_lvl(p.LVL)]
     packs = dict()
 
     attempts = 2
@@ -56,19 +60,21 @@ def pack_eval(level, regions, skip, skips):
                     # found a match
                     print(f"Entering {pr}")
                     logging.info(f"Pack: {pr}")
-                    remove_pack(level, pr)
+                    remove_pack(p.LVL, pr)
                     return packs[pr]
             else:
                 if i == 0 and skip == skips:
-                    priority = p.PICK_ALL[f"floor{level}"]
+                    priority = p.PICK_ALL_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.PICK_ALL_NORMAL[f"floor{p.LVL}"]
                 else: break
         else: 
             # no best packs were specified
             break 
     if skip != skips and priority:
         # no best packs were found -> refresh
-        return None 
-    
+        return None
+    if p.did_normal_then_hard():
+        return 'CANCEL_NORMAL4HARD1' # Try switching back to normal for last floor
+
     # removing S.H.I.T. packs
     filtered = {pack: i for pack, i in packs.items() if pack not in banned}
 
@@ -83,7 +89,7 @@ def pack_eval(level, regions, skip, skips):
             default_key = 1 if len(packs) > 1 and 0 in packs.values() else 0
             
             name = packs_sorted[default_key]
-            remove_pack(level, name)
+            remove_pack(p.LVL, name)
             logging.info(f"Pack: {name}")
             return packs[name]
         return 0
@@ -109,7 +115,7 @@ def pack_eval(level, regions, skip, skips):
     id = max(weight, key=weight.get)
     name = next((pack for pack, i in filtered.items() if i == id), None)
 
-    remove_pack(level, name)
+    remove_pack(p.LVL, name)
     print(f"Entering {name}")
     logging.info(f"Pack: {name}")
     return id
@@ -150,14 +156,17 @@ def pack():
     print("pack check")
     p.LVL = update_lvl(p.LVL)
 
-    if p.LVL == 6 or p.LVL == 11: time.sleep(2) # animation
+    if p.LVL == 6 or p.LVL == 11:
+      time.sleep(2) # animation
+    else:
+      time.sleep(1) # animation
 
     if p.LVL <= 5:
-        if not p.HARD:
-            now.button("hardDifficulty", click=(1349, 64))
-        else:
+        if p.is_on_hard():
             if not now.button("hardDifficulty"):
                 win_click(1349, 64)
+        else:
+            now.button("hardDifficulty", click=(1349, 64))
 
     print(f"Entering Floor {p.LVL}")
     logging.info(f"Floor {p.LVL}")
@@ -185,9 +194,18 @@ def pack():
 
     for skip in range(skips + 1):
         time.sleep(0.2)
-        id = pack_eval(p.LVL, regions, skip, skips)
+        id = pack_eval(regions, skip, skips)
         # cv2.imwrite(f"choices/pack{int(time.time())}.png", screenshot()) # debugging
         if not id is None:
+            if id == 'CANCEL_NORMAL4HARD1':
+                print('Cancel normal4->hard1')
+                p.cancel_normal_then_hard()
+                now.button("hardDifficulty", click=(1349, 64))
+                time.sleep(0.2)
+                id = pack_eval(regions, skip, skips)
+                if id is None:
+                    continue
+
             region = regions[id]
             x, y = (region[0] + (region[2] // 2), region[1] + (region[3] // 2))
             x += random.randint(-40, 40)

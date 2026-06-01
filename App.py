@@ -2,6 +2,7 @@ from source_app.utils import *
 from source_app.settings_manager import SettingsManager
 from source_app.widget import SelectizeWidget, IntField, AllIntField
 from source_app.button import CustomButton
+from source_app.combobox import PackComboBox
 from source_app.run import VersionChecker, BotWorker
 from source_app.check_interception import check_windows
 
@@ -16,6 +17,7 @@ class MyApp(QWidget):
 
         # params
         self.hard = False
+        self.hard_state = 'normal4hard1'
         self.count = 0
         self.team = 0
         self.sinners = []
@@ -95,7 +97,12 @@ class MyApp(QWidget):
         self.progress.hide()
 
         self.run = QLabel(self.progress)
-        self.run.setPixmap(QPixmap(Bot.APP_PTH['run']))
+        # self.run.setPixmap(QPixmap(Bot.APP_PTH['run']))
+        self.run.setText('<p style="font-size: 64px; padding-bottom: 16px;">Starting in 5 seconds</p><p style="font-size: 32px; color: #F8AC00">SWITCH TO LIMBUS COMPANY</p>')
+        self.run.setFont(QFont(self.family))
+        self.run.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.run.setGeometry(0, 0, 700, 785)
+        self.run.setStyleSheet("color: #F8C200;")
         self.run.hide()
 
         self.rerun = QLabel(self.progress)
@@ -190,7 +197,7 @@ class MyApp(QWidget):
         # self.test.setGeometry(228, 514, 169, 26)
         # self.test.show()
 
-    def set_priority(self, team=None):
+    def load_priority(self, team=None):
         if team is None:
             team = self.team
         self.priority, self.avoid, self.priority_floors, self.avoid_floors = self.get_packs(team)
@@ -202,17 +209,18 @@ class MyApp(QWidget):
         else:
             priority = self.get_priority(team)
             avoid = self.get_avoid()
-            priority_floors = {}
+            priority_floors = self.get_priority_floors(team)
             avoid_floors = {}
         return priority, avoid, priority_floors, avoid_floors
 
     def init_widgets(self):
         for i in range(2):
-            combo = QComboBox()
+            combo = PackComboBox()
             combo.setFont(self.font_large)
             combo.setStyle(QStyleFactory.create('Windows'))
-            combo.setStyleSheet('color: #EDD1AC; selection-background-color: transparent; outline: none; border: none;')
+            combo.setStyleSheet('color: #EDD1AC; selection-background-color: #AAAAAA88; outline: none;')
             combo.setFixedSize(185, 32)
+            combo.setMaxVisibleItems(18)
 
             selectize = SelectizeWidget(font=self.font_medium)
             selectize.itemAdded.connect(self.handle_item_added)
@@ -246,9 +254,9 @@ class MyApp(QWidget):
                 validator = QRegularExpressionValidator(QRegularExpression("^([1-5])$"))
             line_edit.setValidator(validator)
             line_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            line_edit.setFixedSize(32, 32)
+            line_edit.setFixedSize(32, 24)
             line_edit.setStyle(QStyleFactory.create('Windows'))
-            line_edit.setStyleSheet('color: #5df2ff; outline: none;')
+            line_edit.setStyleSheet('QLineEdit { color: #5df2ff; outline: none; border: none; } QLineEdit:hover { border-bottom: 1px solid #4A90E2; }')
 
             top_layout.addWidget(line_edit)
             top_layout.addWidget(btn_add)
@@ -306,8 +314,7 @@ class MyApp(QWidget):
             combo = self.combo_boxes[i]
             selectize = self.selectize_widgets[i]
 
-            combo.clear()
-            combo.addItems(self.available_items)
+            combo.setItems(self.available_items)
 
             selectize.clear()
             if i == 0:
@@ -319,6 +326,7 @@ class MyApp(QWidget):
                     number = self.avoid_floors.get(item)
                     selectize.add_item(item, number, refresh=False)
             selectize._refresh_items()
+        self.render_hardmode()
 
     def handle_item_added(self, item):
         if item in self.available_items:
@@ -361,26 +369,23 @@ class MyApp(QWidget):
             if current_text in self.available_items:
                 combo.setCurrentText(current_text)
     
-    def reset_to_defaults(self, team, default=True):
-        # Reset the data lists to defaults
-        if default:
-            self.priority = self.get_priority(team)
-            self.avoid = self.get_avoid()
-            self.priority_floors = {}
-            self.avoid_floors = {}
-            self.set_card_buttons([])
-            self.activate_ego_gifts({})
-            buff = [1]*4 + [0]*6
-            if self.hard:
-                on = [False, True, False, False, False, False, False]
-                self.set_buttons_active(on + buff)
-            else:
-                on = [False, True, False, False, True, False, False]
-                self.set_buttons_active(on + buff)
-            self.sm.delete_config()
-            self.sm.save_settings()
+    def reset_to_defaults(self, team):
+        self.priority = self.get_priority(team)
+        self.avoid = self.get_avoid()
+        self.priority_floors = self.get_priority_floors(team)
+        self.avoid_floors = {}
+        self.set_card_buttons([])
+        self.activate_ego_gifts({})
+        buff = [1, 0, 1, 1, 0,
+                0, 0, 1, 0, 0]
+        if self.hard:
+            on = [False, True, False, False, False, False, False]
+            self.set_buttons_active(on + buff)
         else:
-            self.set_priority(team)
+            on = [False, True, False, False, True, False, False]
+            self.set_buttons_active(on + buff)
+        self.sm.delete_config()
+        self.sm.save_settings()
         self.set_widgets()
 
     def _day(self, sin=False):
@@ -392,15 +397,20 @@ class MyApp(QWidget):
             return (day_number + 1) % 7
         else:
             return (day_number > 1) + (day_number > 3) - (day_number == 6)
-    
-    def get_priority(self, team):
+
+    def get_team_data(self, team):
         affinity = self.selected_affinity[team][0]
         if self.hard:
-            team_data = Bot.TEAMS[list(Bot.TEAMS.keys())[affinity]]
+            return Bot.HARD[list(Bot.TEAMS.keys())[affinity]]
         else:
-            team_data = Bot.HARD[list(Bot.HARD.keys())[affinity]]
-        return team_data.get(f"floors", [])
-    
+            return Bot.TEAMS[list(Bot.HARD.keys())[affinity]]
+
+    def get_priority(self, team):
+        return self.get_team_data(team).get(f"floors", [])
+
+    def get_priority_floors(self, team):
+        return self.get_team_data(team).get(f"priority_floors", [])
+
     def get_all(self):
         if self.hard:
             return Bot.HARD_UNIQUE
@@ -502,9 +512,9 @@ class MyApp(QWidget):
             (f'buff{i}', {
                 'geometry': (31 + 64*i, 416, 64, 68),
                 'checkable': True,
-                'checked': True,
+                'checked': i in Bot.DEFAULT_GRACE,
                 'id': i,
-                'state': 1,
+                'state': 1 if i in Bot.DEFAULT_GRACE else 0,
                 'click_handler': self.update_buff_icons,
                 'icon': Bot.APP_PTH['affinity_support']
             }) for i in range(4)
@@ -515,9 +525,9 @@ class MyApp(QWidget):
             (f'buff{i}', {
                 'geometry': (31 + 64*i - (i//4), 11, 64, 68),
                 'checkable': True,
-                'checked': False,
+                'checked': i in Bot.DEFAULT_GRACE,
                 'id': i,
-                'state': 0,
+                'state': 1 if i in Bot.DEFAULT_GRACE else 0,
                 'click_handler': self.update_buff_icons,
                 'icon': Bot.APP_PTH['affinity_support']
             }) for i in range(4, 10)
@@ -638,9 +648,11 @@ class MyApp(QWidget):
             'hard': CustomButton(self, {
                 'geometry': (24, 166, 178, 58),
                 'checkable': True,
-                'checked': False,
+                'checked': True,
+                'state': 2,
                 'click_handler': self.set_hardmode,
-                'icon': Bot.APP_PTH['hard']
+                'icon': Bot.APP_PTH['normal4hard1'],
+                'icon_cache': [Bot.APP_PTH['hard']],
             }),
 
             'log': CustomButton(self, {
@@ -699,7 +711,7 @@ class MyApp(QWidget):
         self.set_team()
         self.set_extra()
         self.priority_team.setPixmap(QPixmap(Bot.APP_PTH[f'team{self.selected_affinity[self.team][0]}']))
-        self.set_priority()
+        self.load_priority()
 
         self.init_widgets()
         self.set_widgets()
@@ -763,11 +775,42 @@ class MyApp(QWidget):
         painter.drawPixmap(self.rect(), self.background)
 
     def set_hardmode(self):
-        self.update_button_icons()
-        self.hard = self.buttons['hard'].isChecked()
-        self.set_priority()
+        sender = self.sender()
+        if not sender or not isinstance(sender, QPushButton):
+            return
+
+        state = getattr(sender, "config", {}).get("state", None)
+        if state is None:
+            return
+
+        next_state = (state + 1) % 3
+        sender.config["state"] = next_state
+
+        sender.setChecked(True)
+        if next_state == 0:
+            sender.setIcon(QIcon())
+        elif next_state == 1:
+            sender.setIcon(QIcon(Bot.APP_PTH["hard"]))
+        else:
+            icon_path = getattr(sender, "config", {}).get("icon", "")
+            if icon_path:
+                sender.setIcon(QIcon(icon_path))
+
+
+        self.set_hardmode_state(next_state)
+
+    def set_hardmode_state(self, state):
+        self.hard = state == 1
+        self.hard_state = "normal"
+        if state == 1:
+            self.hard_state = "hard"
+        elif state == 2:
+            self.hard_state = "normal4hard1"
+        self.load_priority()
         self.set_widgets()
-        buff = [1]*4 + [0]*6
+
+    def render_hardmode(self):
+        buff = [1, 0, 1, 1, 0, 0, 1, 0, 0, 0]
         if self.hard:
             on = [False, True, False, False, False, False, False]
             self.set_buttons_active(on + buff)
@@ -1016,7 +1059,8 @@ class MyApp(QWidget):
                 sender.setChecked(True)
 
         self.priority_team.setPixmap(QPixmap(Bot.APP_PTH[f'team{self.selected_affinity[self.team][0]}']))
-        self.reset_to_defaults(self.team, default=False)
+        self.load_priority(self.team)
+        self.set_widgets()
         self.set_selected_buttons(self.sinner_selections[self.team])
         self.set_affinity_buttons(self.selected_affinity[self.team])
     
@@ -1320,16 +1364,23 @@ class MyApp(QWidget):
                 i = (self.team + index) % 7
                 affinity = self.selected_affinity[i][0]
                 if self.buttons[f"team{i}"].isChecked():
-                    priority, avoid, priority_f, avoid_f = self.get_packs(i)
+                    tmp_hard = self.hard
+                    self.hard = False
+                    priority_n, avoid_n, priority_f_n, avoid_f_n = self.get_packs(i)
+                    self.hard = True
+                    priority_h, avoid_h, priority_f_h, avoid_f_h = self.get_packs(i)
+                    self.hard = tmp_hard
                     self.teams[i] = {
                         "duplicates": affinity in duplicates,
                         "affinity_idx": counts[i],
                         "affinity": self.selected_affinity[i],
-                        "sinners": self.sinner_selections[i], 
-                        "priority": (priority, priority_f),
-                        "avoid": (avoid, priority_f, avoid_f)
-                    }               
-        
+                        "sinners": self.sinner_selections[i],
+                        "priority_normal": (priority_n, priority_f_n),
+                        "avoid_normal": (avoid_n, priority_f_n, avoid_f_n),
+                        "priority_hard": (priority_h, priority_f_h),
+                        "avoid_hard": (avoid_h, priority_f_h, avoid_f_h)
+                    }
+
 
         self.settings = {
             'bonus'      : self.buttons['on0'].isChecked() if not self.is_lux else self.buttons['on10'].isChecked(),
@@ -1338,8 +1389,8 @@ class MyApp(QWidget):
             'enkephalin' : self.buttons['on3'].isChecked() if not self.is_lux else self.buttons['on9'].isChecked(),
             'skip'       : self.buttons['on4'].isChecked(),
             'wishmaking' : self.buttons['on5'].isChecked(),
-            'winrate'    : self.hard or self.buttons['on6'].isChecked(),
-            'infinity'   : self.hard and self.buttons['on6'].isChecked(),
+            'winrate'    : self.buttons['on6'].isChecked(),
+            'infinity'   : self.hard_state == 'hard' and self.buttons['on6'].isChecked(),
             'buff'       : [getattr(self.buttons[f'buff{i}'], 'config', {}).get('state', 0) for i in range(10)],
             'card'       : self.get_cards(),
             'keywordless': {Bot.WORDLESS[id]['name']: state for id, state in self.keywordless.items()}
@@ -1371,7 +1422,7 @@ class MyApp(QWidget):
             self.count_thd,
             self.teams,
             self.settings,
-            self.hard,
+            self.hard_state,
             self
         )
 

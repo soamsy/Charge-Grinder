@@ -272,7 +272,7 @@ def select(sinners):
     loading_halt()
 
 
-def chain(gear_start, gear_end, background):
+def chain(gear_start, gear_end, background, check_lowskill=False):
     # Finding skill3 positions
     x, y = gear_start
     length = gear_end[0] - gear_start[0]
@@ -300,6 +300,21 @@ def chain(gear_start, gear_end, background):
         else:
             win_moveTo(x + 68, y + 80, duration=0.15, tsize=(60, 60), inertia=True)
         x += 115
+    if check_lowskill:
+        gui.mouseUp()
+        time.sleep(0.3)
+        lowskill = get_lowskill()
+        if len(lowskill) >= 2:
+            raise ValueError("Battle is too hard for chaining")
+        else:
+            if moves[i]:
+                win_moveTo(x - 47, y + 60, duration=0.15, tsize=(20, 20), inertia=True)
+                gui.mouseDown()
+                win_moveTo(x - 47, y + 190, duration=0.15, tsize=(20, 20), inertia=True)
+            else:
+                win_moveTo(x - 47, y + 80, duration=0.15, tsize=(20, 20), inertia=True)
+                gui.mouseDown()
+
     win_moveTo(x + 91, y + 131, duration=0.15, tsize=(25, 25), inertia=True)
     gui.mouseUp()
 
@@ -327,6 +342,8 @@ def fight(lux=False):
     print("Entered Battle")
     last_error = 0
     attempts = 0
+    should_winrate = lux or p.WINRATE
+    check_lowskill = p.is_on_hard()
     while True:
         ck = False
         if loc.button("winrate", wait=1):
@@ -337,9 +354,11 @@ def fight(lux=False):
                 gear_start = gui.center(LocateEdges.try_locate(PTH["gear"], region=(0, 761, 900, 179), conf=0.7))
                 gear_end = gui.center(LocateEdges.try_locate(PTH["gear2"], region=(350, 730, 1570, 232), conf=0.7))
                 is_focused = False
-                if lux or p.WINRATE: raise gui.ImageNotFoundException
+                if should_winrate:
+                    raise ValueError("Battle isn't focused but we want to winrate anyway")
                 background = screenshot(region=(round(gear_start[0] + 100), 775, round(gear_end[0] - gear_start[0] - 200), 10))
-                chain(gear_start, gear_end, background)
+                chain(gear_start, gear_end, background, check_lowskill)
+                check_lowskill = False
 
                 # success check
                 time.sleep(1)
@@ -348,14 +367,17 @@ def fight(lux=False):
                     time.sleep(0.5)
                     gui.press("enter", 1, 0.1)
                     time.sleep(1)
-            except gui.ImageNotFoundException:
+            except (gui.ImageNotFoundException, ValueError) as error:
+                if isinstance(error, ValueError):
+                    print(error)
+                should_winrate = True
                 gui.press("p", 1, 0.1)
                 time.sleep(0.5)
 
                 if is_focused and not loc.button("winrate_on", "winrate", wait=2, method=cv2.TM_SQDIFF_NORMED):
                     win_click(1385, 930)
 
-                if not lux and p.HARD: select_ego()
+                if not lux and p.is_on_hard(): select_ego()
                 gui.press("enter", 1, 0.1)
                 time.sleep(1)
 

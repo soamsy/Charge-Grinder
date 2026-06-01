@@ -1,4 +1,5 @@
 from source.utils.utils import *
+from source_app.utils import *
 from itertools import cycle
 
 from source.battle import fight, select_team
@@ -105,7 +106,7 @@ def collect_rewards():
     )
 
 def click_bonus():
-    if p.HARD:
+    if p.is_on_hard():
         now_rgb.button("bonus", "hardbonus", click=True)
     else:
         now_rgb.button("bonus", click=True)
@@ -113,7 +114,7 @@ def click_bonus():
     win_moveTo(x, y)
 
 def bonus_gone():
-    if p.HARD:
+    if p.is_on_hard():
         if not loc_rgb.button("bonus", "hardbonus", wait=1):
             return now_rgb.button("bonus_off", "hardbonus", conf=0.8)
         else: return False
@@ -244,7 +245,7 @@ def main_loop():
 
         if p.LIMBUS_NAME not in (win := gui.getActiveWindowTitle()): pause(win)
 
-        if p.HARD and now.button("suicide"):
+        if p.is_on_hard() and now.button("suicide"):
             if not p.EXTREME:
                 win_click(815, 700)
             else:
@@ -315,7 +316,7 @@ def main_loop():
 
 # when App is run:
 def set_team(team, teams, keywordless):
-    if p.HARD: team_list = HARD
+    if p.is_on_hard(): team_list = HARD
     else: team_list = TEAMS
 
     p.TEAM = [list(team_list.keys())[aff] for aff in list(teams[team]["affinity"])]
@@ -326,14 +327,16 @@ def set_team(team, teams, keywordless):
     if not p.BUFF[3]: p.GIFTS[0]['uptie1'] = {k: p.GIFTS[0]['uptie1'][k] for k in list(p.GIFTS[0]['uptie1'])[:1]}
 
     p.SELECTED = [list(SINNERS.keys())[i] for i in list(teams[team]["sinners"])]
-    p.PICK = generate_packs_pr(teams[team]["priority"])
-    p.IGNORE = generate_packs_av(teams[team]["avoid"])
-    p.PICK_ALL = generate_packs_all(teams[team]["priority"])
-    print(p.PICK, p.IGNORE, p.PICK_ALL)
+    p.PICK_NORMAL = generate_packs_pr(teams[team]["priority_normal"])
+    p.IGNORE_NORMAL = generate_packs_av(teams[team]["avoid_normal"])
+    p.PICK_ALL_NORMAL = generate_packs_all(teams[team]["priority_normal"])
+    p.PICK_HARD = generate_packs_pr(teams[team]["priority_hard"])
+    p.IGNORE_HARD = generate_packs_av(teams[team]["avoid_hard"])
+    p.PICK_ALL_HARD = generate_packs_all(teams[team]["priority_hard"])
 
     logging.info(f'Team: {p.TEAM[0]}')
     
-    difficulty = "HARD" if p.HARD else "NORMAL"
+    difficulty = "HARD" if p.is_on_hard() else "NORMAL"
     if p.EXTREME: 
         difficulty = "EXTREME"
         lunar_comp = list(set(["slashmemory", "piercememory", "bluntmemory"]) - set([f"{name.lower()}memory" for name in p.TEAM]))
@@ -344,8 +347,8 @@ def set_team(team, teams, keywordless):
     logging.info(f'Difficulty: {difficulty}')
 
 
-def execute_me(count, count_exp, count_thd, teams, settings, hard, app, warning):
-    p.HARD = hard
+def execute_me(count, count_exp, count_thd, teams, settings, hard_state, app, warning):
+    p.HARD_STATE = hard_state
     p.BONUS = settings['bonus']
     p.RESTART = settings['restart']
     p.ALTF4, p.ALTF4_lux = settings['altf4']
@@ -361,7 +364,7 @@ def execute_me(count, count_exp, count_thd, teams, settings, hard, app, warning)
 
     if count == -1: count = 9999
     print("Switch to Limbus Window")
-    countdown(10)
+    countdown(5)
     logging.info('Script started')
     try:
         gui.set_window()

@@ -308,6 +308,7 @@ class SaveWorker(QObject):
         self.save_requested.connect(self._on_save_requested)
 
     def _on_save_requested(self, data):
+        print("save path", self.path)
         self._queue.append(copy.deepcopy(data))
         if len(self._queue) == 1:
             self._process_next()

@@ -4,7 +4,7 @@ import threading
 import source.utils.params as p
 
 
-_PROFILE_DEFAULT = "SAFE"
+_PROFILE_DEFAULT = "FAST"
 
 PROFILES = {
     "SAFE": {
@@ -28,8 +28,8 @@ PROFILES = {
         "key_interval_jitter": (0.94, 1.14),
         "rhythm_every_actions": (10, 16),
         "rhythm_pause": (0.05, 0.16),
-        "neutral_drift_px": 2,
-        "neutral_drift_chance": 0.25,
+        "neutral_drift_px": 1,
+        "neutral_drift_chance": 0.2,
         "click_hold_median_ms": 83.0,
         "click_hold_iqr_ms": 15.0,
         "click_hold_bounds_ms": (35.0, 180.0),

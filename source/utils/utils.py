@@ -142,9 +142,9 @@ def generate_packs_pr(input_priority):
     priority, priority_f = input_priority
     
     packs = {f"floor{i}": [] for i in range(1, 6 + p.EXTREME*10)}
-    floors = HARD_FLOORS if p.HARD else FLOORS
 
     for i in range(1, 6 + p.EXTREME*10):
+        floors = HARD_FLOORS if p.is_on_hard(i) else FLOORS
         for pack in priority:
             assigned_on_this_floor = {pack for pack, fl in priority_f.items() if fl == i}
             if (pack in floors[format_lvl(i)] and (
@@ -157,9 +157,8 @@ def generate_packs_av(input_avoid):
     avoid, priority_f, avoid_f = input_avoid
     
     packs = {f"floor{i}": [] for i in range(1, 6 + p.EXTREME*10)}
-    floors = HARD_FLOORS if p.HARD else FLOORS
-
     for i in range(1, 6 + p.EXTREME*10):
+        floors = HARD_FLOORS if p.is_on_hard(i) else FLOORS
         for pack in avoid:
             if (pack in floors[format_lvl(i)] and (
                (pack in avoid_f and avoid_f[pack] == i) or
@@ -178,9 +177,9 @@ def format_lvl(lvl):
 def generate_packs_all(input_priority):
     priority, priority_f = input_priority
     packs = {f"floor{i}": [] for i in range(1, 6 + p.EXTREME*10)}
-    floors = HARD_FLOORS if p.HARD else FLOORS
 
     for i in range(1, 6 + p.EXTREME*10):
+        floors = HARD_FLOORS if p.is_on_hard(i) else FLOORS
         packs[f"floor{i}"] = list((set(priority) - set(priority_f.keys())) & set(floors[format_lvl(i)]))
     return packs
 

@@ -161,7 +161,7 @@ def grab_EGO():
 
     cycle = 1
     trials = None
-    if p.HARD and now.button("trials"): 
+    if p.is_on_hard() and now.button("trials"):
         cycle = 2
         if p.EXTREME:
             trials = screenshot(region=REG["buffs"])

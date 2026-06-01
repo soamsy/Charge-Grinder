@@ -398,7 +398,7 @@ def fuse_search(have):
     advanced_fusing = []
     if p.GIFTS[0]["sin"] and not p.GIFTS[0]["goal"][0] in have.keys():
         advanced_fusing.append((0, search_have(have, 1, 0), 1))
-    if p.HARD and p.GIFTS[0]["sin"] and not p.GIFTS[0]["goal"][1] in have.keys():
+    if p.is_on_hard() and p.GIFTS[0]["sin"] and not p.GIFTS[0]["goal"][1] in have.keys():
         advanced_fusing.append((0, search_have(have, 3, 0), 3))
     advanced_fusing.sort(key=lambda item: (item[1], item[0]))
     return advanced_fusing
@@ -1019,7 +1019,7 @@ def shop():
     if now_click.button("return"): time.sleep(0.5)
 
     if now.button("shop"): p.SUPER = "shop"
-    elif not p.HARD or not now.button("supershop"): return False
+    elif not p.is_on_hard() or not now.button("supershop"): return False
     else: p.SUPER = "supershop"
     print("shop check")
     time.sleep(0.2)
@@ -1034,7 +1034,7 @@ def shop():
             )
         ): return False
 
-    if p.DEAD > 0 and p.HARD:
+    if p.DEAD > 0 and p.is_on_hard():
         revive_idiots()
         heal_all()
 

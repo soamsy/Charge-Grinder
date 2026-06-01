@@ -57,14 +57,14 @@ class BotWorker(QObject):
     error = pyqtSignal(str)
     warning = pyqtSignal(str)
 
-    def __init__(self, count, count_exp, count_thd, teams, settings, hard, app):
+    def __init__(self, count, count_exp, count_thd, teams, settings, hard_state, app):
         super().__init__()
         self.count = count
         self.count_exp = count_exp
         self.count_thd = count_thd
         self.teams = teams
         self.settings = settings
-        self.hard = hard
+        self.hard_state = hard_state
         self.app = app
 
         self.cache_thread = None
@@ -74,7 +74,7 @@ class BotWorker(QObject):
         try:
             teams_filtered = {k: v for k, v in self.teams.items() if k < 7}
             if teams_filtered:
-                self.start_cache_thread(teams_filtered, self.settings, self.hard)
+                self.start_cache_thread(teams_filtered, self.settings, self.hard_state)
 
             Bot.execute_me(
                 self.count,
@@ -82,7 +82,7 @@ class BotWorker(QObject):
                 self.count_thd,
                 self.teams,
                 self.settings,
-                self.hard,
+                self.hard_state,
                 self.app,
                 warning=self.warning.emit
             )
@@ -93,9 +93,9 @@ class BotWorker(QObject):
             self.stop_cache_thread()
             self.finished.emit()
 
-    def start_cache_thread(self, teams, settings, hard):
+    def start_cache_thread(self, teams, settings, hard_state):
         self.cache_thread = QThread()
-        self.cache_worker = CacheWorker(teams, settings, hard)
+        self.cache_worker = CacheWorker(teams, settings, hard_state)
 
         self.cache_worker.moveToThread(self.cache_thread)
         self.cache_thread.started.connect(self.cache_worker.run)

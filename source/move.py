@@ -37,7 +37,7 @@ def is_event(_loc, region):
 def is_shop(_loc, region):
     if _loc.button("shop0", region) or \
        _loc.button("shop1", region, v_comp=None, distort=None) or \
-       (p.HARD and (_loc.button("super0", region) or _loc.button("super1", region, v_comp=None, distort=None))):
+       (p.is_on_hard() and (_loc.button("super0", region) or _loc.button("super1", region, v_comp=None, distort=None))):
         return True
     return False
 
@@ -199,7 +199,7 @@ def move():
     if not is_move or \
            now.button("Confirm"): return False
     
-    if p.HARD:
+    if p.is_on_hard():
         time.sleep(1.2) # node reveal animation
         if now.button("suicide"): return False
     else:

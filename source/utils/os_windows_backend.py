@@ -380,7 +380,7 @@ def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0
     update_inertia(raw_path, times)
 
 
-def click(x=None, y=None, button='left', clicks=1, interval=0.15, duration=0.0, tsize=(5.0, 5.0), delay=0.03):
+def click(x=None, y=None, button='left', clicks=1, interval=0.12, duration=0.0, tsize=(2.0, 2.0), delay=0.03):
     _fail_safe_check()
     profile = get_macro_profile()
     _apply_macro_rhythm(profile)
