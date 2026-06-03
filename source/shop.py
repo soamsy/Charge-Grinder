@@ -230,7 +230,7 @@ def not_at_bottom():
 def not_at_top():
     return not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full")
 
-def browse(hook_x, step=140, adj=0, dur=0.3):
+def browse(hook_x, step=140, adj=0, dur=0.1):
     win_moveTo(hook_x, 480, tsize=(1, 1))
     win_dragTo(hook_x, 480 - step + adj, duration=dur, hook=True, tsize=(1, 1))
 
@@ -355,7 +355,7 @@ def perform_clicks(to_click):
     while not_at_bottom():
         print("scroll down for inventory click alignment")
         browse_fast(hook_x)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     to_click = sorted(to_click, key=lambda x: x[2])
     h = 0
@@ -378,7 +378,7 @@ def perform_clicks(to_click):
     while not_at_top():
         print("scroll up for alignment")
         browse_fast(hook_x, up=True)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 
 def set_affinity(i, teams=None):
@@ -472,7 +472,7 @@ def handle_available_fusion():
     while not_at_top():
         print("scroll up for alignment")
         browse_fast(hook_x, up=True)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     if not now_rgb.button("fusion_available"):
         return now_rgb.button("scroll", "scroll_full")
@@ -507,7 +507,7 @@ def fuse():
         while not_at_bottom():
             print("scroll down for invetory scan alignment")
             browse_fast(hook_x)
-            time.sleep(0.5)
+            time.sleep(0.3)
     
     coords, coords_agg, have = get_inventory()
     to_click = []
@@ -700,7 +700,7 @@ def sell(gifts):
                 while not_at_bottom():
                     print("scroll down for sell scan")
                     browse_fast(hook_x)
-                    time.sleep(0.5)
+                    time.sleep(0.3)
                 adj = 0
                 hook_x = find_hook_x()
                 while not_at_top():
@@ -746,7 +746,7 @@ def enhance(gifts, floor1=False):
 
     get_uptie_inventory(gift_list)
     close_panel()
-    time.sleep(0.3)
+    time.sleep(0.2)
 
 
 ### Shop shelf-related logic
@@ -1036,7 +1036,7 @@ def leave():
 
 
 def shop():
-    if now_click.button("return"): time.sleep(0.5)
+    if now_click.button("return"): time.sleep(0.3)
 
     if now.button("shop"): p.SUPER = "shop"
     elif not p.is_on_hard() or not now.button("supershop"): return False

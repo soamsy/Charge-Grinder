@@ -194,7 +194,7 @@ def move():
         wait_while_condition(condition=lambda: now.button("Move"), interval=0.1)
         p.MOVE_ANIMATION = False
         is_move = loc.button("Move", wait=2)
-        time.sleep(0.5)
+        time.sleep(0.4)
     
     if not is_move or \
            now.button("Confirm"): return False

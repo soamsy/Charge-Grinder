@@ -366,23 +366,23 @@ def fight(lux=False):
                 time.sleep(1)
                 if now.button("winrate"):
                     gui.press("p", 1, 0.1)
-                    time.sleep(0.5)
+                    time.sleep(0.3)
                     gui.press("enter", 1, 0.1)
-                    time.sleep(1)
+                    time.sleep(0.6)
             except (gui.ImageNotFoundException, ValueError) as error:
                 if isinstance(error, ValueError):
                     print(error)
                 if check_lowskill:
                     should_winrate = True
                 gui.press("p", 1, 0.1)
-                time.sleep(0.5)
+                time.sleep(0.3)
 
                 if is_focused and not loc.button("winrate_on", "winrate", wait=2, method=cv2.TM_SQDIFF_NORMED):
                     win_click(1385, 930)
 
                 if not lux and p.is_on_hard(): select_ego()
                 gui.press("enter", 1, 0.1)
-                time.sleep(1)
+                time.sleep(0.5)
 
         if now_rgb.button("event"):
             ck = True

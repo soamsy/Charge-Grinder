@@ -435,7 +435,7 @@ def scroll(clicks, x=None, y=None):
 def press(keys, presses=1, interval=0.1, delay=0.09):
     profile = get_macro_profile()
     _apply_macro_rhythm(profile)
-    time.sleep(randomize_with_profile(delay / 2, profile=profile, key="delay_jitter"))
+    time.sleep(randomize_with_profile(delay / 3, profile=profile, key="delay_jitter"))
 
     if isinstance(keys, str):
         keys = [keys]
@@ -454,7 +454,7 @@ def press(keys, presses=1, interval=0.1, delay=0.09):
             _get_bridge().key_release(key)
 
         if interval > 0 and _p < presses - 1:
-            time.sleep(randomize_with_profile(interval / 2, profile=profile, key="key_interval_jitter"))
+            time.sleep(randomize_with_profile(interval / 3, profile=profile, key="key_interval_jitter"))
             _fail_safe_check()
 
 def hotkey(*args, **kwargs):
