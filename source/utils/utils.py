@@ -484,8 +484,9 @@ class SIFTMatcher: # unlike other modules, this works only with 1920x1080
         else:
             raise TypeError(f"Unsupported template type: {type(template)}")
     
-    def _match_template(self, template, min_matches=40, inlier_ratio=0.25):
+    def _match_template(self, template, min_matches=50, inlier_ratio=0.22):
         # comp = p.WINDOW[2] / 1920
+        template_name = template
         template = SIFTMatcher._load_template(template)
         # if comp != 1:
         #     template = cv2.resize(template, None, fx=comp, fy=comp, interpolation=cv2.INTER_LINEAR)
@@ -511,6 +512,7 @@ class SIFTMatcher: # unlike other modules, this works only with 1920x1080
         # cv2.imwrite(f"{time.time()}.png", img_matches)
         
         if sum(matches_mask) < inlier_ratio * len(good): return None
+        print(template_name, "matches_mask", sum(matches_mask), ">=", inlier_ratio * len(good))
         
         h, w = template.shape
         pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)

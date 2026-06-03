@@ -1260,7 +1260,7 @@ class MyApp(QWidget):
 
     def set_card_buttons(self, button_keys: list):
         self.selected_card_order.clear()
-        if not button_keys: button_keys = [1, 0, 2, 3, 4]
+        if not button_keys: button_keys = [0, 2, 1, 3, 4]
         self.selected_card_order = [self.buttons[f'card{key+1}'] for key in button_keys]
 
         # First uncheck all selectable buttons

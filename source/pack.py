@@ -153,6 +153,7 @@ def update_lvl(level):
 def pack():
     if not now.button("PackChoice"):
         return False
+    p.time_elapsed()
     print("pack check")
     p.LVL = update_lvl(p.LVL)
 

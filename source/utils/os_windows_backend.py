@@ -333,7 +333,7 @@ def _emit_rel_open_loop(dev, dx, dy):
     _get_bridge().mouse_move_relative(int(dx), int(dy))
 
 
-def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0, curve=0.8, n_sub=None, inertia=False):
+def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0, curve=0.2, n_sub=None, inertia=False):
     _fail_safe_check()
     _ensure_mouse_settings()
 
@@ -348,7 +348,7 @@ def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0
 
     if delay > 0:
         profile = get_macro_profile()
-        time.sleep(randomize_with_profile(delay, profile=profile, key="delay_jitter"))
+        time.sleep(randomize_with_profile(delay/2, profile=profile, key="delay_jitter"))
 
     duration_override = duration if duration and duration > 0 else None
 
@@ -435,7 +435,7 @@ def scroll(clicks, x=None, y=None):
 def press(keys, presses=1, interval=0.1, delay=0.09):
     profile = get_macro_profile()
     _apply_macro_rhythm(profile)
-    time.sleep(randomize_with_profile(delay, profile=profile, key="delay_jitter"))
+    time.sleep(randomize_with_profile(delay / 2, profile=profile, key="delay_jitter"))
 
     if isinstance(keys, str):
         keys = [keys]
@@ -454,7 +454,7 @@ def press(keys, presses=1, interval=0.1, delay=0.09):
             _get_bridge().key_release(key)
 
         if interval > 0 and _p < presses - 1:
-            time.sleep(randomize_with_profile(interval, profile=profile, key="key_interval_jitter"))
+            time.sleep(randomize_with_profile(interval / 2, profile=profile, key="key_interval_jitter"))
             _fail_safe_check()
 
 def hotkey(*args, **kwargs):

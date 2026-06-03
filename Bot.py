@@ -175,6 +175,7 @@ def dungeon_end():
             logging.error("Termination error")
             break
     print("MD Finished!")
+    p.time_elapsed()
 
 # FAIL RUN
 FAIL = [
@@ -361,6 +362,7 @@ def execute_me(count, count_exp, count_thd, teams, settings, hard_state, app, wa
     p.EXTREME = settings['infinity']
     p.APP = app
     p.WARNING = warning
+    p.START_TIME = time.perf_counter()
 
     if count == -1: count = 9999
     print("Switch to Limbus Window")

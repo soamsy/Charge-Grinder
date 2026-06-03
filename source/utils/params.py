@@ -1,4 +1,4 @@
-import threading
+import threading, time
 
 LIMBUS_NAME = "LimbusCompany"
 
@@ -49,6 +49,13 @@ MOVE_ANIMATION = False
 MACRO_PROFILE = "SAFE"
 MACRO_RHYTHM = True
 KEY_ERRORS = 0
+
+START_TIME = 0
+
+def time_elapsed():
+    elapsed_seconds = time.perf_counter() - START_TIME
+    minutes, seconds = divmod(int(elapsed_seconds), 60)
+    print(f"Elapsed time: {minutes:02d}:{seconds:02d}")
 
 def is_on_hard(level=None):
     if HARD_STATE == "normal4hard1_canceled":

@@ -284,6 +284,7 @@ def chain(gear_start, gear_end, background, check_lowskill=False):
     for coord in skill3:
         bin_index = int(min(max((coord - 14 + 80*(2*((coord + gear_start[0] + 100)/1920) - 1)) // 115, 0), skill_num - 1))
         moves[bin_index] = True
+    print("moves", moves)
     # print(gear_start)
     # print(gear_end)
     # print(length)
@@ -315,7 +316,7 @@ def chain(gear_start, gear_end, background, check_lowskill=False):
                 win_moveTo(x - 47, y + 80, duration=0.15, tsize=(20, 20), inertia=True)
                 gui.mouseDown()
 
-    win_moveTo(x + 91, y + 131, duration=0.15, tsize=(25, 25), inertia=True)
+    win_moveTo(x + 101, y + 131, duration=0.30, tsize=(5, 5), inertia=True)
     gui.mouseUp()
 
 
@@ -340,6 +341,7 @@ def fight(lux=False):
             select(p.SELECTED[:6])
 
     print("Entered Battle")
+    p.time_elapsed()
     last_error = 0
     attempts = 0
     should_winrate = lux or p.WINRATE
@@ -370,7 +372,8 @@ def fight(lux=False):
             except (gui.ImageNotFoundException, ValueError) as error:
                 if isinstance(error, ValueError):
                     print(error)
-                should_winrate = True
+                if check_lowskill:
+                    should_winrate = True
                 gui.press("p", 1, 0.1)
                 time.sleep(0.5)
 
@@ -415,6 +418,7 @@ def fight(lux=False):
                     loading_halt()
                     print("Battle is over")
                     logging.info("Battle is over")
+                    p.time_elapsed()
                     return True
             else:
                 wait_while_condition(lambda: not now.button("Confirm_retry", method=cv2.TM_SQDIFF_NORMED), lambda: win_click(1200, 530), interval=1, timer=3)
@@ -427,6 +431,7 @@ def fight(lux=False):
                 if i == "loading": loading_halt()
                 print("Battle is over")
                 logging.info("Battle is over")
+                p.time_elapsed()
                 return True
             
         # for i in range(3):

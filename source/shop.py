@@ -216,6 +216,19 @@ def inventory_check(reg, h, uptie_det=True):
 
     return coords, coords_agg, have, uptie
 
+SCROLLABLE_X_LOCS = [
+    [1083, 1228, 1370, 1515],
+    [1088, 1226, 1364, 1501],
+]
+
+def find_hook_x():
+    return random.choice(SCROLLABLE_X_LOCS[random.randint(0, len(SCROLLABLE_X_LOCS)-1)])
+
+def not_at_bottom():
+    return not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full")
+
+def not_at_top():
+    return not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full")
 
 def browse(hook_x, step=140, adj=0, dur=0.3):
     win_moveTo(hook_x, 480, tsize=(1, 1))
@@ -248,8 +261,8 @@ def concat(dict1, dict2):
 
 def get_inventory():
     uptie = None
-    hook_x = random.choice([1083, 1228, 1370, 1515])
-    while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+    hook_x = find_hook_x()
+    while not_at_bottom():
         print("scroll down for inventory alignment")
         browse_fast(hook_x)
         time.sleep(0.5)
@@ -257,8 +270,8 @@ def get_inventory():
     if now_rgb.button("scroll.0"):
         h = 0
         adj = 0
-        hook_x = random.choice([1083, 1228, 1370, 1515])
-        while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+        hook_x = find_hook_x()
+        while not_at_top():
             if h == 0:
                 box = LocateGray.locate(PTH["gifts_owned"], region=REG["fuse_shelf"])
                 region = REG["fuse_shelf"]
@@ -288,7 +301,7 @@ def get_inventory():
                 print(adj)
             h += 1
 
-        # while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+        # while not_at_top():
         #     print("scroll up for alignment")
         #     browse(step=-300, dur=0.05, pr_end=False)
         #     time.sleep(0.5)
@@ -320,7 +333,7 @@ def actual_fuse(tier, coords):
         return None
     else: return missing
 
-def fuse_selected():
+def fuse_selected(gift=None):
     wait_while_condition(lambda: not now.button("Confirm.2"), lambda: win_click(1197, 876) if now.button("fuse") else None, timer=1.5)
     wait_while_condition(lambda: not now.button("Confirm"), lambda: gui.press("space") if now.button("Confirm.2") else None, timer=1.5)
     connection()
@@ -338,8 +351,8 @@ def perform_clicks(to_click):
         win_moveTo(1194, 841)
         time.sleep(0.2)
 
-    hook_x = random.choice([1083, 1228, 1370, 1515])
-    while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+    hook_x = find_hook_x()
+    while not_at_bottom():
         print("scroll down for inventory click alignment")
         browse_fast(hook_x)
         time.sleep(0.5)
@@ -361,8 +374,8 @@ def perform_clicks(to_click):
     fuse_selected()
     to_click.clear()
 
-    hook_x = random.choice([1083, 1228, 1370, 1515])
-    while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+    hook_x = find_hook_x()
+    while not_at_top():
         print("scroll up for alignment")
         browse_fast(hook_x, up=True)
         time.sleep(0.5)
@@ -419,7 +432,7 @@ def get_gifts(gifts, reg, is_fuse=False):
             else: template = amplify(cv2.imread(PTH[gift]))
             x, y = gui.center(LocateRGB.try_locate(template, image=image, region=reg, conf=0.88))
             print(f"got {gift}")
-            yield (x, y)
+            yield (x, y, gift)
         except gui.ImageNotFoundException:
             continue
 
@@ -428,16 +441,16 @@ def click_gifts(gifts, reg, chain=None, is_fuse=False):
         return True
     
     gift_searcher = get_gifts(gifts, reg, is_fuse=is_fuse)
-    for coord in gift_searcher:
+    for (x, y, gift) in gift_searcher:
         ignore = LocateRGB.locate_all(PTH["cannot_fuse"], region=reg, threshold=80)
         print(ignore)
-        if any(abs(gui.center(res)[0] - coord[0]) < 50 for res in ignore):
+        if any(abs(gui.center(res)[0] - x) < 50 for res in ignore):
             continue
 
         print("got a gift for fusion!")
-        win_click(coord)
+        win_click((x, y))
         if chain is not None and callable(chain):
-            chain()
+            chain(gift)
         time.sleep(0.2)
         if is_fuse and LocateGray.check(PTH["gifts_owned"], region=REG["gifts_owned"], wait=False):
             print("all fused!")
@@ -455,8 +468,8 @@ def get_fuse_list():
 
 def handle_available_fusion():
     print("checking available fusion...")
-    hook_x = random.choice([1083, 1228, 1370, 1515])
-    while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+    hook_x = find_hook_x()
+    while not_at_top():
         print("scroll up for alignment")
         browse_fast(hook_x, up=True)
         time.sleep(0.5)
@@ -474,8 +487,8 @@ def handle_available_fusion():
     if now_rgb.button("scroll", "scroll_full"):
         h = 1
         adj = 0
-        hook_x = random.choice([1083, 1228, 1370, 1515])
-        while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+        hook_x = find_hook_x()
+        while not_at_bottom():
             print("scroll down for available fusions tab")
             browse(hook_x, adj=adj)
             if click_gifts(gift_list, REG["fuse_shelf_top"], chain=fuse_selected, is_fuse=True):
@@ -490,8 +503,8 @@ def fuse():
     time.sleep(0.2)
 
     if handle_available_fusion():
-        hook_x = random.choice([1083, 1228, 1370, 1515])
-        while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+        hook_x = find_hook_x()
+        while not_at_bottom():
             print("scroll down for invetory scan alignment")
             browse_fast(hook_x)
             time.sleep(0.5)
@@ -637,8 +650,14 @@ def fuse_loop():
 
 
 ### EGO gift enhance logic
-def power_up():
-    for _ in range(2):
+def power_up(gift):
+    limit = 2
+    for gift_config in p.GIFTS:
+        for capped_gift, cap in gift_config["uptie_cap"].items():
+            if capped_gift == gift:
+                limit = cap
+    print("power_up limit", limit)
+    for _ in range(limit):
         wait_while_condition(lambda: not now.button("Confirm.2"), lambda: gui.press("space"), timer=1.5)
         wait_while_condition(lambda: not now.button("power"), lambda: gui.press("space"), timer=1.5)
 
@@ -647,8 +666,8 @@ def get_uptie_inventory(gift_list):
     if now_rgb.button("scroll", "scroll_full"):
         h = 1
         adj = 0
-        hook_x = random.choice([1083, 1228, 1370, 1515])
-        while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+        hook_x = find_hook_x()
+        while not_at_bottom():
             print("scroll down for enhance click")
             browse(hook_x, adj=adj)
             click_gifts(gift_list, REG["fuse_shelf_low"], chain=power_up)
@@ -677,14 +696,14 @@ def sell(gifts):
             if search_sell((920, 295, 790, 345)):
                 found_flag = True
             elif now_rgb.button("scroll", "scroll_full"):
-                hook_x = random.choice([1088, 1226, 1364, 1501])
-                while not now_rgb.button("scroll.0") and now_rgb.button("scroll", "scroll_full"):
+                hook_x = find_hook_x()
+                while not_at_bottom():
                     print("scroll down for sell scan")
                     browse_fast(hook_x)
                     time.sleep(0.5)
                 adj = 0
-                hook_x = random.choice([1088, 1226, 1364, 1501])
-                while not now_rgb.button("scroll") and now_rgb.button("scroll", "scroll_full"):
+                hook_x = find_hook_x()
+                while not_at_top():
                     if search_sell((920, 585, 790, 165)):
                         found_flag = True
                         break
@@ -716,6 +735,7 @@ def check_ehance_cost(gifts):
 
 
 def enhance(gifts, floor1=False):
+    print('gifts', gifts)
     if not floor1:
         gift_list = check_ehance_cost(gifts)
         if not gift_list: return

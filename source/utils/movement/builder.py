@@ -658,7 +658,7 @@ def build_trajectory(
     angle = math.atan2(ey - sy, ex - sx)
     biased_end = _sample_endpoint_bias((ex, ey), angle, target_width, target_height)
     dist = math.hypot(ex - sx, ey - sy)
-    duration = _quantize_duration(sample_duration(dist, duration_override), sample_rate)
+    duration = _quantize_duration(sample_duration(dist, duration_override), sample_rate) / 2
 
     layout_data = _load_layout_data(CFG["model_path"])
     if layout_data is None:
