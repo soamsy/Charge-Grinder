@@ -84,7 +84,7 @@ def grind_lux(count_exp, count_thd, teams):
                 if p.NETZACH: check_enkephalin(shift=227)
 
                 choices.sort(key=lambda box: box[0], reverse=True)
-                print(choices)
+                # print(choices)
                 win_click(gui.center(choices[0]))
                 time.sleep(0.5)
 
@@ -136,6 +136,7 @@ def grind_lux(count_exp, count_thd, teams):
         except gui.PauseException as e:
             pause(e.window)
 
+    gui.press("esc")
     wait_while_condition(lambda: not now.button("Exp"))
     time.sleep(1)
     gui.press("esc")

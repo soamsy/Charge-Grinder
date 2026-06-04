@@ -127,7 +127,7 @@ def close_limbus(error=None):
     else: raise error
 
 
-def wait_while_condition(condition, action=None, interval=0.5, timer=20):
+def wait_while_condition(condition, action=None, interval=0.3, timer=20):
     start_time = time.time()
     while condition():
         if time.time() - start_time > timer:
@@ -225,7 +225,7 @@ class Locate(): # if inputing np.ndarray, convert to BGR first!
         return cv2.warpPerspective(image, M_combined, (w + 1, h))
 
     @staticmethod
-    def _load_template(template, comp=1, v_comp=None, h_comp=None, distort=None):
+    def _load_template(template, comp=1, v_comp=None, h_comp=None, distort=None, **kwargs):
         if isinstance(template, str):
             Locate.tsize["name"] = template
             template = cv2.imread(template)
@@ -284,7 +284,10 @@ class Locate(): # if inputing np.ndarray, convert to BGR first!
         template, image = cls._convert(template, image)
         result = cv2.matchTemplate(image, template, method)
         match_w, match_h = template.shape[1], template.shape[0]
-        for (x, y) in cls._compare(result, conf, method):
+        matches = cls._compare(result, conf, method)
+        if 'search_from_right' in kwargs and kwargs['search_from_right']:
+            matches = [*matches][::-1]
+        for (x, y) in matches:
             comp = 1920 / p.WINDOW[2]
             x_fullhd = int(x*comp) + x_off
             y_fullhd = int(y*comp) + y_off
@@ -357,6 +360,7 @@ class Locate(): # if inputing np.ndarray, convert to BGR first!
                             tsize = Locate.tsize["size"]            
                     
                     win_moveTo(res, tsize=tsize)
+                    time.sleep(0.1)
                     gui.click()
                     # if isinstance(template, str):
                     #     print(f"clicked {os.path.splitext(os.path.basename(template))[0]}")
@@ -437,7 +441,6 @@ def create_mask(image, target_hsv, tolerance):
 def is_grayscale(img, threshold=20):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     saturation = hsv[:, :, 1]
-    print(f"Average saturation: {saturation.mean():.2f}")
     return saturation.mean() < threshold
 
 
@@ -512,7 +515,6 @@ class SIFTMatcher: # unlike other modules, this works only with 1920x1080
         # cv2.imwrite(f"{time.time()}.png", img_matches)
         
         if sum(matches_mask) < inlier_ratio * len(good): return None
-        print(template_name, "matches_mask", sum(matches_mask), ">=", inlier_ratio * len(good))
         
         h, w = template.shape
         pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
@@ -660,12 +662,13 @@ def loading_halt():
 
 def connection():
     wait_while_condition(
-        condition=lambda: not now.button("loading"),
-        timer=0.5,
-        interval=0.1
+        condition=lambda: not now.button("connecting"),
+        timer=0.4,
+        interval=0.03
     )
     wait_while_condition(
         condition=lambda: now.button("connecting"),
+        interval=0.03
     )
     
 
@@ -678,11 +681,12 @@ class BaseAction:
 
 
 class Action(BaseAction):
-    def __init__(self, key, region=None, click=None, ver=None):
+    def __init__(self, key, region=None, click=None, ver=None, duration=None):
         self.key = key
         self.region = region
         self.click = click
         self.ver = ver
+        self.duration = duration
 
     def should_execute(self, _=None):
         return True  # Always executed
@@ -692,6 +696,8 @@ class Action(BaseAction):
         kwargs = {}
         if self.click is not None:
             kwargs["click"] = self.click
+            if self.duration is not None:
+                kwargs["duration"] = self.duration
         return preset.button(*args, ver=self.ver or ver, **kwargs)
 
 
@@ -748,3 +754,6 @@ def input_with_fallback(key, mouse_action, ver_func):
     if ver_func():
         return True
     return False
+
+def clip(low, val, high):
+    return max(low, min(val, high))

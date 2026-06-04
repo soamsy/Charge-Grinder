@@ -9,7 +9,7 @@ from source.move import move
 from source.grab import grab_card, grab_EGO, confirm, get_adversity
 from source.shop import shop
 from source.lux import grind_lux, check_enkephalin
-from source.teams import TEAMS, HARD
+from source.teams import TEAMS, HARD, CUSTOM_TEAMS, DEFAULT_TEAM_MODS
 import source.utils.params as p
 
 
@@ -41,6 +41,40 @@ def select_grace():
             if p.BUFF[i] > 1:
                 ClickAction((x + 60*(1 - 2*(p.BUFF[i] < 3)), y + 155), ver="money!").execute(try_click)
 
+def ignore_gift_search():
+    searchOn = now.button("giftSearch")
+    if p.is_saikai():
+        if not searchOn:
+            win_click(1720, 240)
+        return
+    elif searchOn:
+        now_click.button("giftSearch")
+
+def get_out():
+    gui.press("space")
+    win_click()
+
+def has_keywordless():
+    return now.button("keywordless", timeout=0.2)
+
+def navigate_gift_search():
+    if not p.is_saikai():
+        return
+
+    chain_actions(try_click, [
+        lambda: wait_while_condition(lambda: not has_keywordless(), action=lambda: get_out(), timer=4, interval=0.1),
+        Action("keywordless", region=(951, 251, 25, 25)),
+        lambda: time.sleep(0.2),
+        lambda: wait_while_condition(lambda: not LocateRGB.locate(PTH["spiderwebentangled"], region=(115, 334, 1020, 600)), timer=4),
+        lambda: win_click(gui.center(LocateRGB.locate(PTH["spiderwebentangled"]))),
+        Action("selectgiftsearch"),
+        Action("ConfirmInvert", ver="Confirm.0"),
+        confirm_items,
+    ])
+
+def confirm_items():
+    return wait_while_condition(lambda: not now.button("loading"), lambda: gui.press("space") if now.button("Confirm") else None, timer=4)
+
 def dungeon_start():
     ACTIONS = [
         Action("Drive"),
@@ -48,7 +82,7 @@ def dungeon_start():
         lambda: time.sleep(1.4),
         lambda: win_click(1588, 567) if p.EXTREME and now_rgb.button("infinite_off") else None,
         Action("Start"),
-        Action("enterInvert", ver="ConfirmTeam"),
+        Action("enterInvert", ver="ConfirmTeam", click=(1150, 730)),
         select_team,
         lambda: try_click.button("ConfirmTeam"),
         lambda: time.sleep(0.5),
@@ -63,14 +97,14 @@ def dungeon_start():
         Action("Confirm.0", ver="refuse"),
 
         lambda: time.sleep(0.2),
-        lambda: now_click.button("giftSearch"),
+        ignore_gift_search,
         ClickAction(p.GIFTS[0]["checks"][2], ver="gifts!"),
         lambda: ClickAction((1239, 395), ver="selected!").execute(try_click) if (p.BUFF[3] or p.GIFTS[0]['checks'][5] == 0) else None,
         lambda: ClickAction((1239, 549), ver="selected!").execute(try_click) if (p.BUFF[3] or p.GIFTS[0]['checks'][5] == 1) else None,
         lambda: ClickAction((1239, 703), ver="selected!").execute(try_click) if p.BUFF[9] else None,
         ClickAction((1624, 882)),
 
-        lambda: wait_while_condition(lambda: not now.button("loading"), lambda: gui.press("space") if now.button("Confirm") else None, timer=5),
+        navigate_gift_search if p.is_saikai() else confirm_items,
         loading_halt
     ]
     
@@ -262,18 +296,31 @@ def main_loop():
             logging.info('Run Failed')
             dungeon_fail()
             return False
+        
+        actions = {
+            "pack": pack,
+            "move": move,
+            "fight": fight,
+            "event": event,
+            "grab_EGO": grab_EGO,
+            "confirm": confirm,
+            "get_adversity": get_adversity,
+            "grab_card": grab_card,
+            "shop": shop.enter_shop,
+        }
 
+        def steps():
+            return [actions[action] for action in actions.keys() if action != "get_adversity" or p.EXTREME]
+
+        ck = False
         try:
-            ck  = pack()
-            ck += move()
-            ck += fight()
-            ck += event()
-            ck += grab_EGO()
-            ck += confirm()
-            if p.EXTREME:
-                ck += get_adversity()
-            ck += grab_card()
-            ck += shop()
+            ring = steps()
+            for action in ring:
+                ck += action()
+                while p.EXPECT_ACTION:
+                    sidequest = p.EXPECT_ACTION
+                    p.EXPECT_ACTION = None
+                    ck += actions[sidequest]()
         except RuntimeError:
             handle_fuckup()
             error += 1
@@ -314,6 +361,13 @@ def main_loop():
 
         time.sleep(0.2)
 
+def handle_mods(teams, team, keywordless):
+    if "mods" not in teams[team]:
+        return
+    if "saikai" in teams[team]["mods"]:
+        p.TEAM = p.TEAM[:1]
+        p.GIFTS = CUSTOM_TEAMS["SAIKAI"]
+        keywordless["spiderwebentangledred"] = 1
 
 # when App is run:
 def set_team(team, teams, keywordless):
@@ -324,6 +378,8 @@ def set_team(team, teams, keywordless):
     p.NAME_ORDER = teams[team]["affinity_idx"]
     p.DUPLICATES = teams[team]["duplicates"]
     p.GIFTS = [team_list[keyword] for keyword in p.TEAM]
+    p.MODS = teams[team]["mods"] if teams[team] else {}
+    handle_mods(teams, team, keywordless)
 
     if not p.BUFF[3]: p.GIFTS[0]['uptie1'] = {k: p.GIFTS[0]['uptie1'][k] for k in list(p.GIFTS[0]['uptie1'])[:1]}
 
@@ -363,6 +419,9 @@ def execute_me(count, count_exp, count_thd, teams, settings, hard_state, app, wa
     p.APP = app
     p.WARNING = warning
     p.START_TIME = time.perf_counter()
+    lux_keys = [key for key in teams.keys() if key >= 7]
+    team_keys = [key for key in teams.keys() if key < 7]
+    p.MODS = teams[team_keys[0]]["mods"] if team_keys else teams[lux_keys[0]]["mods"]
 
     if count == -1: count = 9999
     print("Switch to Limbus Window")
@@ -370,9 +429,6 @@ def execute_me(count, count_exp, count_thd, teams, settings, hard_state, app, wa
     logging.info('Script started')
     try:
         gui.set_window()
-        lux_keys = [key for key in teams.keys() if key >= 7]
-        team_keys = [key for key in teams.keys() if key < 7]
-
         if lux_keys:
             print("Entering Lux!")
             grind_lux(count_exp, count_thd, teams)

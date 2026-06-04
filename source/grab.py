@@ -111,7 +111,7 @@ def find_trial(trials_image):
         for c in [1, 1.05]:
             res = LocateRGB.locate_all(PTH[f"trial_{name}"], trials_image, method=cv2.TM_SQDIFF_NORMED, comp=c, conf=0.87, threshold=100)
             if res:
-                print(name)
+                # print(name)
                 return res
     return []
 
@@ -130,10 +130,9 @@ def get_trial(image, trials_image):
         trials_image: image with the selected trials replaced with a black rectangle
     '''
     res = find_trial(trials_image)
-    print(res)
     if len(res) == 1:
         point = gui.center(res[0])
-        win_click(point[0], 600, tsize=(150, 170))
+        win_click(point[0], 600, tsize=(100, 170))
         return rectangle(image, (int(point[0]-140), 0), (int(point[0]+140), 110), (0, 0, 0), -1), \
                rectangle(trials_image, (int(point[0]-140), 0), (int(point[0]+140), 52), (0, 0, 0), -1)
     elif len(res) > 1:
@@ -154,7 +153,7 @@ def grab_EGO():
     '''
     if not now.button("EGObin"): return False
     now_click.button("Cancel")
-    time.sleep(0.8)
+    time.sleep(0.6)
     print("grab ego check")
     owned_x = [p[0] + p[2] for p in LocateRGB.locate_all(PTH["Owned"], region=REG["Owned"])]
     image = screenshot(region=REG["EGO"])
@@ -182,7 +181,7 @@ def grab_EGO():
             image = get_gift(image, owned_x)
             time.sleep(0.1)
 
-    wait_while_condition(lambda: now.button("EGObin"), lambda: gui.press("space"), interval=0.5, timer=2)
+    wait_while_condition(lambda: now.button("EGObin"), lambda: gui.press("space"), interval=0.25, timer=2)
     return True
 
 
@@ -194,7 +193,8 @@ def get_card(card):
         card: (x, y) coordinates
     '''
     chain_actions(click, [
-        Action(card, "Card", ver="rewardCount!"),
+        lambda: now_click.button(card, "Card", ver="rewardCount!", duration=0.20, delay=0.15),
+        # Action(card, "Card", ver="rewardCount!", duration=0.20),
         Action("Confirm.1", ver="connecting")
     ])
 
@@ -207,7 +207,16 @@ def grab_card():
 
     win_moveTo(1000, 900)
     now_click.button("Cancel") # if was misclicked
-    time.sleep(1.4)
+    for _ in range(6):
+        found = False
+        for i in p.CARD:
+            if now.button(f"card{i}", "Card"):
+                found = True
+                break
+        if found:
+            break
+        time.sleep(0.25)
+    time.sleep(0.6)
     for i in p.CARD:
         if now.button(f"card{i}", "Card"):
             get_card(f"card{i}")
@@ -225,9 +234,8 @@ def confirm():
     '''Function to confirm EGO gift pop-ups'''
     if not now.button("Confirm"): return False
     gui.press("space")
-    time.sleep(0.3)
-    if now.button("Confirm"):
-        gui.press("space")
+    time.sleep(0.2)
+    wait_while_condition(lambda: now.button("Confirm"), lambda: gui.press("space"), timer=3.0)
     return True
 
 

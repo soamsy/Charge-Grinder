@@ -7,6 +7,7 @@ def within_region(x, regions):
         if x1 < x < x1 + w:
             return i
     else:
+        print("wtf", x, "is not in regions", regions)
         return None
 
 
@@ -17,78 +18,87 @@ def remove_pack(level, name):
         if name in p.PICK_NORMAL[f"floor{l}"]:
             p.PICK_HARD[f"floor{l}"].remove(name)
 
+def pack_sifter():
+    return SIFTMatcher(region=(161, 630, 1632, 140), nfeatures=1500, contrastThreshold=0.00, edgeThreshold=12)
 
 def pack_eval(regions, skip, skips):
     # best packs
     priority = p.PICK_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.PICK_NORMAL[f"floor{p.LVL}"]
-    print("priority ", end="")
-    pprint(priority)
     logging.info(f"Pick: {priority}")
+
+    backup = p.PICK_ALL_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.PICK_ALL_NORMAL[f"floor{p.LVL}"]
+    backup = [p for p in backup if p not in priority]
+    logging.info(f"Backup: {backup}")
 
     # worst packs (suboptimal time)
     banned = p.IGNORE_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.IGNORE_NORMAL[f"floor{p.LVL}"]
-    print("banned ", end="")
-    pprint(banned)
     logging.info(f"Ignore: {banned}")
 
     pack_list = HARD_FLOORS[format_lvl(p.LVL)] if p.is_on_hard() else FLOORS[format_lvl(p.LVL)]
-    packs = dict()
 
-    attempts = 2
-    while len(packs.keys()) < len(regions) and attempts > 0:
-        sift = SIFTMatcher(region=(161, 630, 1632, 140), nfeatures=3000, contrastThreshold=0.00)
-        for pack in pack_list:
-            if len(packs.keys()) >= len(regions): break
-            box = sift.locate(PTH[pack])
-            if box:
-                x, _ = gui.center(box)
-                if (region_id := within_region(x, regions)) is not None \
-                   and region_id not in packs.values():
-                        packs[pack] = region_id
-        attempts -= 1
+    first = [p for p in pack_list if p in priority]
+    second = [p for p in pack_list if p in backup]
+    third = [p for p in pack_list if p not in priority and p not in backup]
+
+    # for i, region in enumerate(regions):
+    #     cv2.imwrite(f"testing/region_{time.time()}_{i}.png", screenshot(region))
+
+    def locate_packs(packs, tries=1):
+        for _ in range(tries):
+            sift = pack_sifter()
+            # cv2.imwrite(f"testing/sift{time.time()}.png", sift.base_image)
+            for pack in packs:
+                box = sift.locate(PTH[pack])
+                if box:
+                    x, _ = gui.center(box)
+                    region_id = within_region(x, regions)
+                    if region_id is not None:
+                        return pack, region_id
+            time.sleep(0.10)
+        return None, None
+    
+    first_pack, region_id = locate_packs(first, 2)
+    if first_pack:
+        remove_pack(p.LVL, first_pack)
+        logging.info(f"Pack: {first_pack}")
+        print(f"Pack: {first_pack}")
+        return region_id
+    if skip != skips and priority:
+        return None
+    second_pack, region_id = locate_packs(second, 2)
+    if second_pack:
+        remove_pack(p.LVL, second_pack)
+        logging.info(f"Pack: {second_pack}")
+        print(f"Pack: {second_pack}")
+        return region_id
+    if skip != skips and backup:
+        return None
+
+    sift = pack_sifter()
+    packs = dict()
+    for pack in third:
+        if len(packs.keys()) >= len(regions): break
+        box = sift.locate(PTH[pack])
+        if box:
+            x, _ = gui.center(box)
+            if (region_id := within_region(x, regions)) is not None \
+                and region_id not in packs.values():
+                    packs[pack] = region_id
     
     logging.info(packs)
-    print(packs)
-    
-    # picking the best pack
-    # the first loop checks for packs with specified floor number
-    # second loop checks for packs without numbers
-    for i in range(2):
-        if priority:
-            for pr in priority:
-                if pr in packs.keys():
-                    # found a match
-                    print(f"Entering {pr}")
-                    logging.info(f"Pack: {pr}")
-                    remove_pack(p.LVL, pr)
-                    return packs[pr]
-            else:
-                if i == 0 and skip == skips:
-                    priority = p.PICK_ALL_HARD[f"floor{p.LVL}"] if p.is_on_hard() else p.PICK_ALL_NORMAL[f"floor{p.LVL}"]
-                else: break
-        else: 
-            # no best packs were specified
-            break 
-    if skip != skips and priority:
-        # no best packs were found -> refresh
-        return None
-    if p.did_normal_then_hard():
-        return 'CANCEL_NORMAL4HARD1' # Try switching back to normal for last floor
-
-    # removing S.H.I.T. packs
+    ordered_packs = list(sorted([(i, pack) for pack, i in packs.items()]))
+    in_order = [pack for _, pack in ordered_packs]
+    print(in_order)
     filtered = {pack: i for pack, i in packs.items() if pack not in banned}
 
     if not filtered and skip != skips: 
-        # if all packs are S.H.I.T. -> refresh
         return None
     elif not filtered:
-        # we have to pick S.H.I.T. -> select the first
-        print("May Ayin save us all!")
+        print("Pick bad pack")
+        if p.did_normal_then_hard():
+            return 'CANCEL_NORMAL4HARD1' # Try switching back to normal for last floor
         if packs:
-            packs_sorted = sorted(packs, key=packs.get)
-            default_key = 1 if len(packs) > 1 and 0 in packs.values() else 0
-            
-            name = packs_sorted[default_key]
+            name = random.choice(list(packs.keys()))
             remove_pack(p.LVL, name)
             logging.info(f"Pack: {name}")
             return packs[name]
@@ -157,11 +167,7 @@ def pack():
     print("pack check")
     p.LVL = update_lvl(p.LVL)
 
-    if p.LVL == 6 or p.LVL == 11:
-      time.sleep(2) # animation
-    else:
-      time.sleep(1) # animation
-
+    win_moveTo(1617, 62, tsize=(240, 60))
     if p.LVL <= 5:
         if p.is_on_hard():
             if not now.button("hardDifficulty"):
@@ -169,40 +175,38 @@ def pack():
         else:
             now.button("hardDifficulty", click=(1349, 64))
 
+    time.sleep(1.0)
     print(f"Entering Floor {p.LVL}")
     logging.info(f"Floor {p.LVL}")
 
-    win_moveTo(1617, 62, tsize=(240, 60))
-    time.sleep(0.2)
-
-    card_count = 5
-
-    box = None
     start_time = time.time()
-    while box is None:
-        time.sleep(0.2)
+    box = None
+    while p.LVL > 5 and box is None:
         box = LocateGray.locate(PTH["PackPull"], region=REG["PackPull"])
         if time.time() - start_time > 4:
             break
-    else:
+        time.sleep(0.2)
+
+    card_count = 5
+    if box:
         card_count = 5 - min((max((gui.center(box)[0] - 21), 1) // 157), 2)
     
     offset = (5 - card_count)*161
-    regions = [(182 + offset + 322 * i, 280, 291, 624) for i in range(card_count)]
+    regions = [(170 + offset + 321 * i, 280, 270, 624) for i in range(card_count)]
     skips = 1 + p.BUFF[2] + int(p.BUFF[2] > 0)
 
     print(f"{card_count} Packs")
 
     for skip in range(skips + 1):
-        time.sleep(0.2)
         id = pack_eval(regions, skip, skips)
         # cv2.imwrite(f"choices/pack{int(time.time())}.png", screenshot()) # debugging
         if not id is None:
             if id == 'CANCEL_NORMAL4HARD1':
                 print('Cancel normal4->hard1')
                 p.cancel_normal_then_hard()
-                now.button("hardDifficulty", click=(1349, 64))
-                time.sleep(0.2)
+                if now.button("hardDifficulty"):
+                    win_click(1349, 64, delay=0.5)
+                time.sleep(1.3)
                 id = pack_eval(regions, skip, skips)
                 if id is None:
                     continue
@@ -210,15 +214,16 @@ def pack():
             region = regions[id]
             x, y = (region[0] + (region[2] // 2), region[1] + (region[3] // 2))
             x += random.randint(-40, 40)
-            y += random.randint(-175, 175)
+            y += random.randint(-100, 100)
             win_moveTo(x, y)
-            win_dragTo(x, y + 300, duration=0.31)
+            win_dragTo(x, y + 300, duration=0.61)
             break
         if skip != skips:
             win_click(1617, 62, tsize=(240, 60))
-            time.sleep(2)
+            time.sleep(1.3)
     
     wait_while_condition(lambda: now.button("PackChoice"), interval=0.1)
     if p.LVL != 1: p.MOVE_ANIMATION = True
-    else: time.sleep(0.5)
+    else: time.sleep(0.1)
+    p.EXPECT_ACTION = "move"
     return True

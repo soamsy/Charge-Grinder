@@ -2,6 +2,7 @@ from source.utils.utils import *
 
 # Weights are the average battle time in seconds
 priority = {"Event": 0, "Normal": 52, "Miniboss": 67, "Risky": 87, "Focused": 77}
+saikai_priority = {"Event": 0, "Normal": 52, "Miniboss": 47, "Risky": 63, "Focused": 63}
 v_list = [0.8, 0.9, 1]
 d_list = [None, -0.1, -0.19]
 keys_map = {0: "w", 1: "d", 2: "s"}
@@ -43,9 +44,11 @@ def is_shop(_loc, region):
 
 def get_node_name(_loc, region):
     if is_boss(region):
+        p.EXPECT_ACTION = "fight"
         return "Boss"
     
     if now_rgb.button("coin", region, conf=0.9):
+        p.EXPECT_ACTION = "fight"
         if now_rgb.button("gift", region, conf=0.9):
             if is_risky(_loc, region):
                 return "Risky"
@@ -56,8 +59,10 @@ def get_node_name(_loc, region):
         else:
             return "Normal"
     elif is_event(_loc, region):
+        p.EXPECT_ACTION = "event"
         return "Event"
     elif is_shop(_loc, region):
+        p.EXPECT_ACTION = "shop"
         return "Shop"
     else:
         # cv2.imwrite(f"debug{time.time()}.png", screenshot(region=region))
@@ -66,8 +71,9 @@ def get_node_name(_loc, region):
 
 def position(shift=0):
     x, y = random.randint(1500, 1700), random.randint(300, 500)
+    time.sleep(0.1)
     win_moveTo(x, y, tsize=(1, 1))
-    win_dragTo(x - 295, y + 100 + shift*320, duration=0.41, hook=True, tsize=(1, 1))
+    win_dragTo(x - 295, y + 100 + shift*320, duration=1.5, hook=True, tsize=(1, 1))
 
 def directions(is_aligned=True):
     options = {
@@ -104,7 +110,7 @@ def get_connections(region=(850, 340, 610, 370)):
             paths[j] = LocateGray.get_conf(PTH[direction], image=image)
         j = max(paths, key=paths.get)
         if paths[j] >= 0.87:
-            # direction = ["up", "down"][j]
+            direction = ["up", "down"][j]
             # cv2.imwrite(f"data/{direction}/{time.time()}_{direction}.png", image)
             connections.append(((i % 2, (i//2) + 1 - j), (i % 2 + 1, (i//2) + j)))
         # else:
@@ -122,6 +128,7 @@ def check_connections(connections):
     else: return -1
 
 def next_step(nodes, extra_connections):
+    print("nodes", nodes, "extra_connections", extra_connections)
     L = len(nodes)
     adj = {}
     for i in range(L):
@@ -141,31 +148,39 @@ def next_step(nodes, extra_connections):
             elif c + 1 == a:
                 adj.setdefault((c,d), []).append((a,b))
 
-    def dfs(i, j):
-        base = priority[nodes[i][j]]
+    def dfs(i, j, mult=1.02):
+        base = (priority if not p.is_saikai() else saikai_priority)[nodes[i][j]]
+        base *= mult
         if i == L - 1:
-            return base
+            return base, True
         best = float('inf')
-        for (ni, nj) in adj.get((i,j), []):
+        connections = adj.get((i,j), [])
+        can_go_fast = len(connections) <= 1
+        for (ni, nj) in connections:
             if ni != i + 1:
                 continue
-            sub = dfs(ni, nj)
-            if sub < float('inf'):
-                best = min(best, base + sub)
-        return best
+            sub, _ = dfs(ni, nj, mult*1.02)
+            total = base + sub + (0 if j == nj else 1)
+            if total < best:
+                best = total
+                can_go_fast = j == nj or len(connections) == 1
+        return best, can_go_fast
 
     best_idx = None
     best_cost = float('inf')
+    fast = False
     for j0 in range(len(nodes[0])):
         if nodes[0][j0] is None:
             continue
-        cost0 = dfs(0, j0)
-        if cost0 < best_cost:
+        cost0, can_fast = dfs(0, j0)
+        if cost0 <= best_cost:
             best_cost = cost0
             best_idx = j0
+            fast = can_fast
+            # print("connect", nodes[0][j0], "via", adj.get((0, j0), []), "fast?", fast) 
     if best_idx is None:
-        return None, None
-    return best_idx, nodes[0][best_idx]
+        return None, None, False
+    return best_idx, nodes[0][best_idx], fast
 
 
 def enter(wait=1.2):
@@ -194,16 +209,17 @@ def move():
         wait_while_condition(condition=lambda: now.button("Move"), interval=0.1)
         p.MOVE_ANIMATION = False
         is_move = loc.button("Move", wait=2)
-        time.sleep(0.4)
     
     if not is_move or \
            now.button("Confirm"): return False
     
     if p.is_on_hard():
-        time.sleep(1.2) # node reveal animation
-        if now.button("suicide"): return False
+        time.sleep(1.4) # node reveal animation
     else:
-        time.sleep(0.2)
+        time.sleep(0.15)
+
+    if p.is_on_hard() and now.button("suicide"):
+        return False
     
     print("move check")
     # run fail detection
@@ -219,7 +235,14 @@ def move():
         connection()
         return False
     # fail detection end
-    if now.button("victory") or not now.button("Move"): return False
+    # if now.button("victory") or not now.button("Move"): return False
+    
+    if p.MOVE_FAST_NEXT_TIME:
+        p.MOVE_FAST_NEXT_TIME = False
+        print("Moving quickly...")
+        for key in ["d", "space"]:
+            gui.press(key)
+        return enter(wait=0.5)
 
     if not now_rgb.button("Danteh"):
         print("Case 0: Bus is out of view")
@@ -257,6 +280,7 @@ def move():
 
         if input_with_fallback(key_name, lambda: win_click(gui.center(region)), enter):
             logging.info(f"Entering {name} {'fight'*(name!='Event' and name!='Shop')}")
+            use_node_name(name)
             return True
         return False
     elif all(k in regions for k in (0, 2)):
@@ -274,7 +298,7 @@ def move():
         regions = {key: (634, 80 + key * 310, 282, 275) for key in keys}
     
     inter_connect = get_connections()
-    print(inter_connect)
+    # print(inter_connect)
     nodes = [[None, None, None] for _ in range(3)]
 
     for depth in range(3):
@@ -308,19 +332,34 @@ def move():
             if depth != 0: nodes = nodes[:depth]
             break
     if any(nodes[0]):
-        print(nodes)
-        id, name = next_step(nodes, inter_connect)
+        # print(nodes)
+        id, name, can_go_fast = next_step(nodes, inter_connect)
         if not id is None:
+            p.MOVE_FAST_NEXT_TIME = can_go_fast
+            if can_go_fast:
+                print("go fast next time!!!")
             key_name = keys_map.get(int(id-adjust), "d")
             region = regions[id]
             if input_with_fallback(key_name, lambda: win_click(gui.center(region)), enter):
                 logging.info(f"Entering {name} {'fight'*(name!='Event')}")
+                use_node_name(name)
                 return True
     elif move_fallback():
         logging.info("Entering unknown node")
+        print("nodes is nothing, inter-connect is ", inter_connect)
         return True
     return False
 
+def use_node_name(name):
+    p.EXPECT_CHAIN = False
+    p.EXPECT_FOCUSED = False
+    p.EXPECT_REWARD = False
+    if name == 'Normal':
+        p.EXPECT_CHAIN = True
+    elif name == 'Focused':
+        p.EXPECT_FOCUSED = True
+    elif name in ['Risky', 'Miniboss', 'Boss', 'Shop']:
+        p.EXPECT_REWARD = True
 
 def move_fallback():
     for key in ["d", "space"]:

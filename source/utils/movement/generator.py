@@ -64,7 +64,7 @@ def savgol_filter(x, window_length: int, polyorder: int, deriv: int = 0, delta: 
 
 # Core generation
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=16)
 def _load_model(model_path: str) -> dict:
     with np.load(model_path, allow_pickle=True) as data:
         return {key: data[key] for key in data.files}
@@ -116,9 +116,13 @@ def sample_conditional_gmm(gmm_w, gmm_mu, gmm_cov, score_std, target_features, r
     limit = 3.5 * score_std
     return np.clip(z, -limit, limit)
 
+@lru_cache(maxsize=16)
+def _json_load(path):
+    return json.loads(path)
+
 def generate_mouse_profile(model_path, duration, distance, seed=None):
     data = _load_model(model_path)
-    config = json.loads(str(data["config_json"]))
+    config = _json_load(str(data["config_json"]))
     level_sizes = config["level_sizes"]
     rng = np.random.default_rng(seed)
 

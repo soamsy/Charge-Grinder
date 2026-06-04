@@ -88,7 +88,9 @@ class BotWorker(QObject):
             )
         except Exception as e:
             logging.exception("Uncaught exception in BotWorker thread")  
-            self.error.emit(str(e))
+            import traceback
+            message = traceback.format_exc()
+            self.error.emit(message)
         finally:
             self.stop_cache_thread()
             self.finished.emit()

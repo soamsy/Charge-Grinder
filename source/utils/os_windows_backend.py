@@ -214,7 +214,7 @@ def clip_region_to_virtual(region):
 
 
 def _human_delay(min_delay=0.01, max_delay=0.03):
-    time.sleep(random.uniform(min_delay, max_delay))
+    time.sleep(random.uniform(min_delay*0.7, max_delay*0.7))
 
 
 def _profile_value(profile, key, default):
@@ -333,7 +333,7 @@ def _emit_rel_open_loop(dev, dx, dy):
     _get_bridge().mouse_move_relative(int(dx), int(dy))
 
 
-def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0, curve=0.2, n_sub=None, inertia=False):
+def moveTo(x, y, duration=0, delay=0.0, tsize=(3.0, 3.0), offset_x=0, offset_y=0, curve=0.2, n_sub=None, inertia=False):
     _fail_safe_check()
     _ensure_mouse_settings()
 
@@ -342,7 +342,7 @@ def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0
     end_y = int(round(y + offset_y))
     end_x, end_y = _clamp_point_to_screen_bounds(end_x, end_y)
 
-    tsize = tsize if tsize else (20.0, 20.0)
+    tsize = tsize if tsize else (15.0, 15.0)
     if _within_target((start_x, start_y), (end_x, end_y), tsize):
         return
 
@@ -380,7 +380,7 @@ def moveTo(x, y, duration=0, delay=0.0, tsize=(5.0, 5.0), offset_x=0, offset_y=0
     update_inertia(raw_path, times)
 
 
-def click(x=None, y=None, button='left', clicks=1, interval=0.12, duration=0.0, tsize=(2.0, 2.0), delay=0.03):
+def click(x=None, y=None, button='left', clicks=1, interval=0.09, duration=0.0, tsize=(2.0, 2.0), delay=0.03):
     _fail_safe_check()
     profile = get_macro_profile()
     _apply_macro_rhythm(profile)
@@ -400,16 +400,16 @@ def click(x=None, y=None, button='left', clicks=1, interval=0.12, duration=0.0, 
             _fail_safe_check()
 
 
-def dragTo(x, y, duration=0.1, button='left', tsize=(5.0, 5.0), start_x=None, start_y=None, hook=False):
+def dragTo(x, y, duration=0.33, button='left', tsize=(5.0, 5.0), start_x=None, start_y=None, hook=False):
     _fail_safe_check()
     _apply_macro_rhythm()
     
     if start_x is not None and start_y is not None:
         moveTo(start_x, start_y, tsize=tsize)
-
-    mouseDown(button, delay=0.03)
-    moveTo(x, y, duration=duration, tsize=tsize, n_sub=1, inertia=False)
-    mouseUp(button, delay=0.03)
+    
+    mouseDown(button, delay=0.35)
+    moveTo(x, y, duration=duration, tsize=tsize, curve=0.0, n_sub=1, inertia=False)
+    mouseUp(button, delay=0.06)
 
     if hook:
         mouseDown(button, delay=0.03)
@@ -435,7 +435,7 @@ def scroll(clicks, x=None, y=None):
 def press(keys, presses=1, interval=0.1, delay=0.09):
     profile = get_macro_profile()
     _apply_macro_rhythm(profile)
-    time.sleep(randomize_with_profile(delay / 3, profile=profile, key="delay_jitter"))
+    time.sleep(randomize_with_profile(delay / 5, profile=profile, key="delay_jitter"))
 
     if isinstance(keys, str):
         keys = [keys]
@@ -448,13 +448,13 @@ def press(keys, presses=1, interval=0.1, delay=0.09):
             _fail_safe_check()
             _get_bridge().key_press(key)
             key_hold = _sample_hold_seconds("key", profile=profile)
-            time.sleep(key_hold)
+            time.sleep(key_hold * 0.8)
 
         for key in reversed(keys):
             _get_bridge().key_release(key)
 
         if interval > 0 and _p < presses - 1:
-            time.sleep(randomize_with_profile(interval / 3, profile=profile, key="key_interval_jitter"))
+            time.sleep(randomize_with_profile(interval / 4, profile=profile, key="key_interval_jitter"))
             _fail_safe_check()
 
 def hotkey(*args, **kwargs):

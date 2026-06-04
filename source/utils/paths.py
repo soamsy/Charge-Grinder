@@ -128,6 +128,8 @@ REG = {
     # regions not binded to an image
     "rewardCount!"   : (1494,  181,   23,   42),
     "selectCount!"   : (1745,  975,   32,   44),
+    "selectgiftsearch": (1530, 831,   222,  72),
+    "keywordless": (951, 251, 70, 70),
 
     # move.py
     "Move"           : (1805,  107,   84,   86),
@@ -173,6 +175,7 @@ REG = {
     "replace"        : ( 280,  165,  530,   80),
     "purchased"      : ( 860,  317,  150,   50),
     "purchased_sup!" : (1090,  317,  385,   50),
+    "purchased_s3"   : ( 860,  317,  615,   50),
     "no_hp"          : (  70,  985, 1400,   50),
     "return"         : (1569,  920,  260,  100),
     "select"         : (1569,  920,  260,  100),
@@ -215,30 +218,31 @@ SINNERS = {
 }
 
 WORDLESS = {
-    0:  {"name": "falsehalo",           "state": 3, "tier": 4},
-    1:  {"name": "pieceofrelationship", "state": 3, "tier": 4},
-    2:  {"name": "carmilla",            "state": 3, "tier": 2},
-    3:  {"name": "investigatorbadge",   "state": 3, "tier": 2},
-    4:  {"name": "ancienteffigy",       "state": 2, "tier": 4},
-    5:  {"name": "faith",               "state": 2, "tier": 4},
-    6:  {"name": "kimjihoon",           "state": 2, "tier": 4},
-    7:  {"name": "grandwelcome",        "state": 2, "tier": 3},
-    8:  {"name": "illusoryhunt",        "state": 2, "tier": 3},
-    9:  {"name": "prestigecard",        "state": 2, "tier": 3},
-    10: {"name": "rustycoin",           "state": 2, "tier": 3},
-    11: {"name": "specialcontract",     "state": 2, "tier": 3},
-    12: {"name": "blessing",            "state": 2, "tier": 3},
-    13: {"name": "tango",               "state": 2, "tier": 3},
-    14: {"name": "childwithinflask",    "state": 2, "tier": 2},
-    15: {"name": "coffeecranes",        "state": 2, "tier": 2},
-    16: {"name": "motheclipse",         "state": 2, "tier": 2},
-    17: {"name": "goldenurn",           "state": 2, "tier": 2},
-    18: {"name": "homeward",            "state": 2, "tier": 2},
-    19: {"name": "oracle",              "state": 2, "tier": 2},
-    20: {"name": "painkiller",          "state": 2, "tier": 2},
-    21: {"name": "hammer",              "state": 2, "tier": 2},
-    22: {"name": "lithograph",          "state": 2, "tier": 1},
-    23: {"name": "phlebotomypack",      "state": 2, "tier": 1},
+    0:  {"name": "falsehalo",            "state": 3, "tier": 4},
+    1:  {"name": "pieceofrelationship",  "state": 3, "tier": 4},
+    2:  {"name": "carmilla",             "state": 3, "tier": 2},
+    3:  {"name": "investigatorbadge",    "state": 3, "tier": 2},
+    4:  {"name": "ancienteffigy",        "state": 2, "tier": 4},
+    5:  {"name": "faith",                "state": 2, "tier": 4},
+    6:  {"name": "kimjihoon",            "state": 2, "tier": 4},
+    7:  {"name": "grandwelcome",         "state": 2, "tier": 3},
+    8:  {"name": "illusoryhunt",         "state": 2, "tier": 3},
+    9:  {"name": "prestigecard",         "state": 2, "tier": 3},
+    10: {"name": "rustycoin",            "state": 2, "tier": 3},
+    11: {"name": "specialcontract",      "state": 2, "tier": 3},
+    12: {"name": "blessing",             "state": 2, "tier": 3},
+    13: {"name": "tango",                "state": 2, "tier": 3},
+    14: {"name": "childwithinflask",     "state": 2, "tier": 2},
+    15: {"name": "coffeecranes",         "state": 2, "tier": 2},
+    16: {"name": "motheclipse",          "state": 2, "tier": 2},
+    17: {"name": "goldenurn",            "state": 2, "tier": 2},
+    18: {"name": "homeward",             "state": 2, "tier": 2},
+    19: {"name": "oracle",               "state": 2, "tier": 2},
+    20: {"name": "painkiller",           "state": 2, "tier": 2},
+    21: {"name": "hammer",               "state": 2, "tier": 2},
+    22: {"name": "lithograph",           "state": 2, "tier": 1},
+    23: {"name": "phlebotomypack",       "state": 2, "tier": 1},
+    24: {"name": "spiderwebentangledred","state": 3, "tier": 1},
 }
 
 WORDLESS_MAP = {v["name"]: v["tier"] for v in WORDLESS.values()}
@@ -432,7 +436,6 @@ HARD_BANNED = [
     "TheDuskofAmber",
     "CharmWanderDoubt",
     "BladeandArtwork",
-    "Line1Madness",
     "TwiningThreads",
     "SpringCultivation",
     "ThunderandLightning",
@@ -460,8 +463,6 @@ HARD_BANNED = [
     "LCBRegularCheckupBokGak",
     "NocturnalSweepingBokGak",
     "LaManchalandReopening",
-    "Line1",
-    "Line3Terminus",
     "Bloodfiends",
     "SeasonoftheFlame",
     "FourHousesandGreed",
@@ -472,9 +473,12 @@ HARD_BANNED = [
     "TheHeartbreaking",
     "BridleofInfinity",
     "LakeWorld",
+    "TheUnsevering",
+    "Textbook",
+    "ExcessiveGluttony",
 ]
 
-DEFAULT_GRACE = {0, 2, 3, 6}
+DEFAULT_GRACE = {0, 2, 3}
 
 def get_unique(pack_list):
     unique = []
@@ -498,7 +502,7 @@ if __name__ == "__main__":
         easy, hard = floors
         
         if 5 in hard:
-            print(f"{name}")
+            # print(f"{name}")
             count += 1
         
     print(count, "packs")

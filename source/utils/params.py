@@ -23,6 +23,7 @@ KEYWORDLESS = {}
 HARD_STATE = 'normal4hard1'
 EXTREME = False
 APP = None
+MODS = {}
 
 PICK_NORMAL = {}
 IGNORE_NORMAL = {}
@@ -42,8 +43,24 @@ LVL = 1
 SUPER = "shop" # for Hard MD
 DEAD = 0
 IDX = 0
-TO_UPTIE = {}
+NEED_INVENTORY_CHECK = True
+REFRESH_COUNT = 0
+REFRESH_KEYWORD_COUNT = 0
+INVENTORY = { "coords": [], "coords_agg": [], "have": {} }
+UPTIE_QUEUE = []
+UPTIE_INCOMPLETE_QUEUE = []
+UPTIE_SCHEDULED = set()
+
 MOVE_ANIMATION = False
+MOVE_FAST_NEXT_TIME = False
+
+BALANCE = 0
+NEED_BALANCE_CHECK = True
+
+EXPECT_CHAIN = False
+EXPECT_FOCUSED = False
+EXPECT_REWARD = False
+EXPECT_ACTION = None
 
 # Macro behavior configuration.
 MACRO_PROFILE = "SAFE"
@@ -58,16 +75,23 @@ def time_elapsed():
     print(f"Elapsed time: {minutes:02d}:{seconds:02d}")
 
 def is_on_hard(level=None):
-    if HARD_STATE == "normal4hard1_canceled":
+    if HARD_STATE == "hard_canceled":
         return False
     lvl = level if level is not None else LVL
     if HARD_STATE == "normal4hard1":
-        return lvl >= 5
+        return lvl >= (4 if is_saikai() else 5)
     return HARD_STATE == "hard"
 
 def did_normal_then_hard():
-    return HARD_STATE == "normal4hard1" and LVL >= 5
+    if not is_on_hard():
+        return False
+    if HARD_STATE == "normal4hard1":
+        return LVL >= 5
+    return False
 
 def cancel_normal_then_hard():
     global HARD_STATE
-    HARD_STATE = "normal4hard1_canceled"
+    HARD_STATE = "hard_canceled"
+    
+def is_saikai():
+    return "saikai" in MODS

@@ -6,6 +6,7 @@ class CustomButton(QPushButton):
         self.config = config or {}
         self._glow_cache = {}
         self.glowImage = None
+        self.glow_on_checked = config.get('glow_on_checked', False)
         self.animation = None
 
         self.flickering = False
@@ -32,7 +33,7 @@ class CustomButton(QPushButton):
             self.setIcon(QIcon(self.config['icon']))
             self.setIconSize(self.size())
         
-        if self.isCheckable() and not self.isChecked():
+        if self.isCheckable() and not self.isChecked() and not self.glow_on_checked:
             self.setIcon(QIcon())
 
         if 'glow' in self.config:
@@ -40,7 +41,10 @@ class CustomButton(QPushButton):
                 self._setup_glow_effect(self.config['glow_geometry'])
             else:
                 self._setup_glow_effect(self.config['geometry'])
-        
+            if self.glow_on_checked:
+                self.clicked.connect(self.glow_on_click)
+                self.glow_on_toggle()
+
         if 'filter' in self.config:
             self.event_filter = bool(self.config['filter'])
 
@@ -72,9 +76,9 @@ class CustomButton(QPushButton):
         self.glowImage.setGraphicsEffect(self.opacityEffect)
 
         self.animation = QPropertyAnimation(self.opacityEffect, b"opacity")
-        self.animation.setDuration(300)
+        self.animation.setDuration(self.config.get('glow_duration', 300))
         self.animation.setStartValue(0.0)
-        self.animation.setEndValue(1.0)
+        self.animation.setEndValue(1.0 if not self.glow_on_checked else 0.5)
 
         if enable_hover:
             self.installEventFilter(self)
@@ -94,6 +98,8 @@ class CustomButton(QPushButton):
         return super().eventFilter(obj, event)
 
     def _start_glow(self):
+        if self.should_be_glowing():
+            return
         if not self.glowImage.isVisible():
             self.glowImage.setVisible(True)
         
@@ -102,6 +108,8 @@ class CustomButton(QPushButton):
         self.animation.start()
 
     def _end_glow(self):
+        if self.should_be_glowing():
+            return
         self.animation.stop()
         self.animation.setDirection(QPropertyAnimation.Direction.Backward)
         self.animation.start()
@@ -110,6 +118,26 @@ class CustomButton(QPushButton):
                          lambda: self.glowImage.setVisible(False) 
                          if self.opacityEffect.opacity() == 0.0 
                          else None)
+
+    def should_be_glowing(self):
+        return self.isChecked() and self.glow_on_checked
+    
+    def setCheckedGlow(self, isOn):
+        self.setChecked(isOn)
+        self.glow_on_toggle()
+
+    def glow_on_click(self):
+        self.start_glowing_now(1.0 if self.isChecked() else 0.5)
+    
+    def glow_on_toggle(self):
+        self.start_glowing_now(1.0 if self.isChecked() else 0.0)
+    
+    def start_glowing_now(self, opacity=1.0):
+        if not self.glowImage or not self.animation:
+            return
+        self.glowImage.setVisible(True)
+        self.animation.stop()
+        self.animation.targetObject().setProperty('opacity', opacity)
         
     def trigger_glow_once(self):
         if self.glowImage and self.animation:
@@ -166,6 +194,11 @@ class CustomButton(QPushButton):
         else:
             self._setup_glow_effect(self.config['geometry'], enable_hover=False)
     
+    def raise_(self):
+        super().raise_()
+        if self.glowImage:
+            self.glowImage.raise_()
+
     @staticmethod
     def glow_multiple(buttons):
         for button in buttons:

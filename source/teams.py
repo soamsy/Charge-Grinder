@@ -3,7 +3,7 @@ TEAMS = {
     "BURN": {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"hellterfly": 2, "fiery": 2},
         "uptie2" : {"glimpse": 4},
         "uptie3" : {},
@@ -21,7 +21,7 @@ TEAMS = {
     "BLEED": {
         "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"clerid": 2}, # wolf
         "uptie2" : {"redstained": 4, "gossypium": 2},
         "uptie3" : {"muzzle": 1},
@@ -39,7 +39,7 @@ TEAMS = {
     "TREMOR": {
         "checks" : ["Tremor", "smallTremor", (755, 370), "reTremor", "bigTremor", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"bracelet": 2, "reverberation": 2},
         "uptie2" : {"downpour": 4},
         "uptie3" : {"truthbell": 3},
@@ -57,7 +57,7 @@ TEAMS = {
     "RUPTURE": {
         "checks" : ["Rupture", "smallRupture", (975, 370), "reRupture", "bigRupture", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"lamp": 2}, # "thunderbranch" "lasso"
         "uptie2" : {"thrill": 4, "thunderbranch": 3},
         "uptie3" : {"bundle": 1},
@@ -75,7 +75,7 @@ TEAMS = {
     "SINKING": {
         "checks" : ["Sinking", "smallSinking", (315, 665), "reSinking", "bigSinking", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"redorder": 2},
         "uptie2" : {"artisticsense": 4},
         "uptie3" : {},
@@ -93,7 +93,7 @@ TEAMS = {
     "POISE": {
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"stonetomb": 2}, # holder
         "uptie2" : {"clearmirror": 4, "nebulizer": 2, "devil": 1},
         "uptie3" : {},
@@ -111,7 +111,7 @@ TEAMS = {
     "CHARGE": {
         "checks" : ["Charge", "smallCharge", (755, 665), "reCharge", "bigCharge", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"employeecard": 2, "batterysocket": 2},
         "uptie2" : {"gloves": 4, "vitae": 1},
         "uptie3" : {"wristguards": 1},
@@ -128,7 +128,7 @@ TEAMS = {
     "SLASH": {
         "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"shortcane": 2},
         "uptie2" : {"slashmemory": 4},
         "uptie_cap" : {},
@@ -144,7 +144,7 @@ TEAMS = {
     "PIERCE": {
         "checks" : ["Pierce", "smallPierce", (315, 840), "rePierce", "bigPierce", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {"plumeproof": 2},
         "uptie2" : {"piercememory": 4},
         "uptie_cap" : {},
@@ -160,7 +160,7 @@ TEAMS = {
     "BLUNT": {
         "checks" : ["Blunt", "smallBlunt", (535, 840), "reBlunt", "bigBlunt", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "TobeCleaved": 3, "HatredandDespair": 4},
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
         "uptie1" : {},
         "uptie2" : {"bluntmemory": 4},
         "uptie_cap" : {},
@@ -178,11 +178,11 @@ TEAMS = {
 HARD = {
     "BURN": {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"hellterfly": 2, "fiery": 2},
         "uptie2" : {"glimpse": 4},
-        "uptie3" : {},
+        "uptie3" : {"polarization": 1},
         "uptie_cap" : {},
         "goal"   : ["soothe", "purloinedflame"],
         "fuse1"  : {"stew": 2, "paraffin": 1}, # book
@@ -195,15 +195,15 @@ HARD = {
 
         "buy"    : ["glimpse", "wing", "dust", "stew", "paraffin", "ash", "disk", "hearthflame", "intellect", "hellterfly", "fiery"], # order is important
         "all"    : ["glimpse", "dust", "stew", "paraffin", "ash", "book", "hellterfly", "fiery", "wing", "soothe",
-                    "purloinedflame", "disk", "hearthflame", "intellect"],
+                    "purloinedflame", "disk", "hearthflame", "intellect", "polarization"],
         "sin"    : True
     },
 
     # Bleed
     "BLEED": {
         "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"clerid": 2}, # wolf
         "uptie2" : {"redstained": 4, "gossypium": 2},
         "uptie3" : {"muzzle": 1},
@@ -226,8 +226,8 @@ HARD = {
     # Tremor
     "TREMOR": {
         "checks" : ["Tremor", "smallTremor", (755, 370), "reTremor", "bigTremor", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"bracelet": 2, "reverberation": 2},
         "uptie2" : {"downpour": 4},
         "uptie3" : {"truthbell": 3},
@@ -250,8 +250,8 @@ HARD = {
     # Rupture
     "RUPTURE": {
         "checks" : ["Rupture", "smallRupture", (975, 370), "reRupture", "bigRupture", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"lamp": 2}, # "thunderbranch" "lasso"
         "uptie2" : {"thrill": 4},
         "uptie3" : {"thunderbranch": 3, "bundle": 1},
@@ -274,8 +274,8 @@ HARD = {
     # Sinking
     "SINKING": {
         "checks" : ["Sinking", "smallSinking", (315, 665), "reSinking", "bigSinking", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"redorder": 2},
         "uptie2" : {"artisticsense": 4},
         "uptie3" : {},
@@ -298,8 +298,8 @@ HARD = {
     # Poise
     "POISE": {
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"stonetomb": 2}, # holder
         "uptie2" : {"clearmirror": 4, "nebulizer": 2},
         "uptie3" : {"devil": 1},
@@ -322,8 +322,8 @@ HARD = {
     # Charge
     "CHARGE": {
         "checks" : ["Charge", "smallCharge", (755, 665), "reCharge", "bigCharge", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"employeecard": 2, "batterysocket": 2},
         "uptie2" : {"gloves": 4},
         "uptie3" : {"wristguards": 1, "vitae": 1},
@@ -345,8 +345,8 @@ HARD = {
 
     "SLASH": {
         "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"shortcane": 2},
         "uptie2" : {"slashmemory": 4},
         "uptie_cap" : {},
@@ -363,8 +363,8 @@ HARD = {
 
     "PIERCE": {
         "checks" : ["Pierce", "smallPierce", (315, 840), "rePierce", "bigPierce", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {"plumeproof": 2},
         "uptie2" : {"piercememory": 4},
         "uptie_cap" : {},
@@ -381,8 +381,8 @@ HARD = {
 
     "BLUNT": {
         "checks" : ["Blunt", "smallBlunt", (535, 840), "reBlunt", "bigBlunt", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "TobeCleaved"],
-        "priority_floors" : {"FlatbrokeGamblers": 1, "HatredandDespair": 4, "HellsChicken": 2, "Line2": 5, "The_BE": 5},
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "uptie1" : {},
         "uptie2" : {"bluntmemory": 4},
         "uptie_cap" : {},
@@ -397,6 +397,75 @@ HARD = {
         "sin"    : False
     },
 }
+
+CUSTOM_TEAMS = {
+    "SAIKAI": [{
+        "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
+        "uptie1" : {"stonetomb": 2},
+        "uptie2" : {"clearmirror": 4},
+        "uptie3" : {"nebulizer": 2},
+        "uptie_cap" : {},
+        "goal"   : [],
+        "fuse1"  : {},
+        "fuse2"  : {},
+        "fuse_ex": {},
+        "buy"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "pendant", "emerald"],
+        "all"    : ["stonetomb", "holder", "clearmirror", "nebulizer", "pendant", "horseshoe", "endorphinkit"],
+        "sin"    : True
+    # }, {
+    #     "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
+    #     "uptie1" : {},
+    #     "uptie2" : {},
+    #     "uptie3" : {},
+    #     "uptie_cap" : {},
+    #     "goal"   : [],
+    #     "fuse1"  : {},
+    #     "fuse2"  : {},
+    #     "fuse_ex": {},
+    #     "buy"    : ["contaminatedneedle"],
+    #     "all"    : ["contaminatedneedle"],
+    #     "sin"    : False
+    }
+    # , {
+    #     "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
+    #     "uptie1" : {},
+    #     "uptie2" : {},
+    #     "uptie_cap" : {},
+    #     "goal"   : [],
+    #     "fuse1"  : {},
+    #     "fuse2"  : {},
+    #     "fuse3"  : {},
+    #     "fuse4"  : {},
+    #     "fuse_ex": {},
+    #     "buy"    : [],
+    #     "all"    : [],
+    #     "sin"    : False
+    # }
+    , {
+        "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
+        "uptie1" : {},
+        "uptie2" : {},
+        "uptie3" : {"polarization": 1},
+        "uptie_cap" : {},
+        "goal"   : [],
+        "fuse1"  : {},
+        "fuse2"  : {},
+
+        "fuse3"  : {},
+        "fuse4"  : {},
+
+        "fuse_ex": {},
+
+        "buy"    : ["polarization"], # order is important
+        "all"    : ["polarization"],
+        "sin"    : True
+    }
+    ],
+}
+
+def DEFAULT_TEAM_MODS():
+    mods = { i: {'saikai': True} for i in range(0, 15) }
+    return mods
 
 # from utils.paths import PTH
 # for team in HARD.keys():

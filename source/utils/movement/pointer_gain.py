@@ -54,7 +54,7 @@ def execute_trajectory(dev, raw_path, times, emit_func=None):
 
     for i in range(1, n_points):
         target_time = float(times[i])
-        next_time = start_time + target_time
+        next_time = start_time + target_time / 2
 
         now = time.perf_counter()
         while now < next_time:

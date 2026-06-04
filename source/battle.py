@@ -4,7 +4,7 @@ import source.utils.params as p
 from itertools import product
 
 
-exit_if = ["loading", "Move", "EGObin", "encounterreward", "victory", "defeat", "PackChoice"]
+exit_if = ["loading", "Move", "EGObin", "encounterreward", "victory", "defeat", "PackChoice", "Confirm"]
 
 sins = { # bgr values
     "wrath"   : (  0,   0, 254),
@@ -26,6 +26,13 @@ best2 = [
     "GardenofThorns", "AEDD", "Lantern", "CavernousWailing", "Capote", "Pursuance", "Regret", "RimeShank", "WishingCairn", 
     "ElectricScreaming", "4thMatchFlame", "RedEyesOpen", "ArdorBlossomStar", "BlindObsession", "FluidSac", "HexNail"
 ]
+
+def get_saikai_ryoshu():
+    image = screenshot(region=(0, 900, 1920, 180))
+    ryoshu = LocateRGB.locate(PTH["ryoshu"], image)
+    if ryoshu is None: return
+    x, _ = gui.center(ryoshu)
+    return x
 
 def get_lowskill():
     image = screenshot(region=(0, 820, 1920, 100))
@@ -125,8 +132,68 @@ def is_ego():
             return background
     return None
 
+def get_centroids_by_hue(image, hue, hue_threshold=4, lower_sat=152, upper_sat=255, lower_val=55, upper_val=255, area_min=24):
+    comp = p.WINDOW[2] / 1920
+    area_min *= comp
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower_hue = hue - hue_threshold
+    upper_hue = hue + hue_threshold
+    ranges = []
+    if lower_hue < 0:
+        ranges.append(([lower_hue + 179, lower_sat, lower_val], [179, upper_sat, upper_val]))
+        ranges.append(([0, lower_sat, lower_val], [upper_hue, upper_sat, upper_val]))
+    else:
+        ranges.append(([lower_hue, lower_sat, lower_val], [upper_hue, upper_sat, upper_val]))
+    
+    # print("ranges", ranges)
+    masks = [cv2.inRange(hsv, np.array(low), np.array(high)) for low, high in ranges]
+    mask = masks[0]
+    if len(masks) > 1:
+        mask = cv2.bitwise_or(masks[0], masks[1])
 
-def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=100, sin="envy"):
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        mask, connectivity=8, ltype=cv2.CV_32S
+    )
+
+    points = []
+    for i in range(1, num_labels):
+        area = stats[i, cv2.CC_STAT_AREA]
+        x, y = centroids[i]
+        if area > area_min:
+            points.append((int(x/comp), int(y/comp)))
+
+    # print("hue", hue, ", ", len(points), "points", points)
+    return points
+
+def is_solo(gear_start, gear_end):
+    return count_sinners(gear_start, gear_end) == 1
+    
+def count_sinners(gear_start, gear_end):
+    start_x = round(gear_start[0] + 75)
+    end_x = round(gear_end[0] - 57)
+    start_y = 1026
+    end_y = 1050
+    width = end_x - start_x
+    height = end_y - start_y
+    num_actions = round(width / 123)
+    hp_numbers_image = screenshot(region=(start_x, start_y, width, height))
+    centroids = get_centroids_by_hue(hp_numbers_image, 8, lower_sat=200, lower_val=180)
+    # debug_points([(x+start_x, y+start_y) for x, y in centroids], "debug_count_sinners.png")
+    bins = []
+    bin_size = width / num_actions
+    bins = [(round(i*bin_size), round((i+1)*bin_size)) for i in range(num_actions)]
+    is_bin_filled = [0] * num_actions
+    for x, _ in centroids:
+        for i, (left, right) in enumerate(bins):
+            if left <= x < right:
+                is_bin_filled[i] = 1
+                break
+
+    count = sum(is_bin_filled)
+    return count
+
+def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=120, sin="envy"):
+    # cv2.imwrite('debug_skill3_found.png', background)
     median_rgb = np.median(background, axis=(0, 1)).astype(int)
     blended_rgb = (median_rgb * 0.45 + np.array(known_rgb) * 0.55).astype(int)
 
@@ -187,11 +254,12 @@ def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=1
             # print(sin)
             # cv2.imwrite(f"{time.time()}{sin}.png", pattern)
             continue
-
+    if filtered:
+        print(sin, "found at", filtered)
     return filtered
 
 def select_team():
-    time.sleep(1)
+    time.sleep(0.5)
 
     affinity = p.TEAM[0].lower()
     idx = p.NAME_ORDER
@@ -199,13 +267,12 @@ def select_team():
         return
     
     if now_rgb.button("arrow", conf=0.7):
-        win_moveTo(191, 472)
-        win_dragTo(289, 984)
+        win_moveTo(191, 475)
+        win_dragTo(289, 984, duration=1.0)
         time.sleep(1)
 
     for i in range(4):
         coords = [gui.center(box) for box in LocateGray.locate_all(PTH[f"{affinity}_team"], region=REG["teams"], threshold=15, conf=0.85)]
-        print(coords)
         sorted(coords, key=lambda coord: coord[1])
 
         if len(coords) > idx:
@@ -267,40 +334,127 @@ def select(sinners):
     input_with_fallback(
         "space", 
         lambda: win_click(1728, 884, tsize=(200,  50)), 
-        lambda: loc.button("loading", wait=5)
+        lambda: loc.button("loading", wait=3)
     )
     loading_halt()
+    return death_offset
 
-
-def chain(gear_start, gear_end, background, check_lowskill=False):
+def chain(gear_start, gear_end, check_lowskill=False):
     # Finding skill3 positions
     x, y = gear_start
-    length = gear_end[0] - gear_start[0]
-    skill_num = int(round((length - 140)/115))
+    skill_start_x = x + 73
+    skill_end_x = gear_end[0] - 58
+    skill_middle_y = y + 89
+    length = skill_end_x - skill_start_x
+    # overshoots for low skill count, but undershoots for high skill count due to how the skill tray is resized.
+    # this is fine regardless, since rounding will get us the correct bin length later
+    est_bin_length = 121
+
+    skill_num = int(round(length/est_bin_length))
+    bin_length = length / skill_num
+    half_bin = bin_length / 2
+    
+    top_padding = 38
+    top_start_x = skill_start_x + top_padding
+    top_end_x = skill_end_x - top_padding
+    top_length = top_end_x - top_start_x
+    background = screenshot(region=(top_start_x, 775, top_length, 10))
     skill3 = []
     for sin in sins.keys():
         skill3 += find_skill3(background, sins[sin], sin=sin)
     moves = [False]*skill_num
     for coord in skill3:
-        bin_index = int(min(max((coord - 14 + 80*(2*((coord + gear_start[0] + 100)/1920) - 1)) // 115, 0), skill_num - 1))
-        moves[bin_index] = True
-    print("moves", moves)
-    # print(gear_start)
-    # print(gear_end)
-    # print(length)
-    # print(moves)
+        moves[int(skill_num * coord / top_length)] = True
 
-    # Chaining
+    def sin_search(hue, y_loc, padding=0, filename=""):
+        comp = p.WINDOW[2] / 1920
+        padding *= comp
+        left = skill_start_x + padding
+        width = length - padding * 2
+        row = screenshot(region=(left, y_loc, width, 20))
+        points = get_centroids_by_hue(row, hue)
+        # if filename:
+            # debug_points([(x+left, y+y_loc) for x, y in points], filename)
+        indexes = {int(skill_num * x / width) for x, _ in points}
+        return indexes
+
+    ryoshu_x = -1
+    if p.is_saikai():
+        if is_solo(gear_start, gear_end):
+            wrath_top = sin_search(-2, 795, 40, "debug_top_row.png")
+            wrath_bottom = sin_search(-2, 885, 5, "debug_bottom_row.png")
+            pride_top = sin_search(109, 795, 15)
+            pride_bottom = sin_search(109, 885, 5)
+            wraths = set()
+            prides = set()
+            for i in range(skill_num):
+                if i in (wrath_top | wrath_bottom):
+                    wraths.add(i)
+                elif i in (pride_top | pride_bottom):
+                    prides.add(i)
+            lusts = [i for i in range(skill_num) if i not in wraths and i not in prides]
+            dodges = set()
+            dodges_wanted = skill_num - len(wraths)
+            if len(wraths) == 0:
+                dodges_wanted = 0
+            elif len(wraths) == 1 and skill_num >= 4:
+                dodges_wanted -= 1
+
+            possible_dodges = list(sorted(lusts)) + list(sorted(list(prides)))
+            for possible in possible_dodges:
+                if len(dodges) < dodges_wanted:
+                    dodges.add(possible)
+                else:
+                    break
+            print("wraths_top", wrath_top)
+            print("wraths_bottom", wrath_bottom)
+            print("prides", prides)
+            print("dodges", dodges)
+            for i in range(skill_num):
+                if i in wraths:
+                    moves[i] = i in wrath_bottom
+                elif i in dodges:
+                    moves[i] = True
+                    win_click(skill_start_x + bin_length * i + half_bin, 990)
+                else:
+                    moves[i] = i in pride_bottom
+        else:
+            ryoshu_x = get_saikai_ryoshu()
+            if ryoshu_x and 0 <= ryoshu_x:
+                win_click(ryoshu_x, 990)
+                move_index = int(skill_num * (ryoshu_x-skill_start_x) / length)
+                moves[move_index] = True
+    print("moves", ["Down" if m else "Up" for m in moves])
+
+    skill_targets = []
+    curr_x = skill_start_x
+    curr_y = skill_middle_y
+    for i in range(skill_num):
+        next_y = curr_y + (88 if moves[i] else -88)
+        last_y = (curr_y + (88 if moves[i-1] else 88)) if i > 0 else next_y
+        if last_y != next_y:
+            sub_target_x = curr_x + half_bin * 0.5
+            perspective_offset = -(sub_target_x - 960) / 30
+            diff_y = next_y - last_y
+            sub_target_y = last_y + diff_y * 0.66
+            skill_targets.append((int(sub_target_x), int(sub_target_y), 4))
+
+        target_x = curr_x + half_bin
+        perspective_offset = -(target_x - 960) / 30
+        skill_targets.append((int(target_x + perspective_offset), next_y, 4))
+        curr_x += bin_length
+    final_x = gear_end[0] + 45
+    final_y = skill_middle_y
+
     win_moveTo(gear_start)
     gui.mouseDown()
-    x += 75
-    y -= 46
-    for i in range(skill_num):
-        if moves[i]:
-            win_moveTo(x + 68, y + 190, duration=0.15, tsize=(60, 60), inertia=True)
-        else:
-            win_moveTo(x + 68, y + 80, duration=0.15, tsize=(60, 60), inertia=True)
-        x += 115
+
+    # debug_points([(x, y) for x, y, _ in skill_targets] + [(final_x, final_y)], "debug_skill_chain.png")
+    for x, y, size in skill_targets:
+        dur = 0.2
+        curve = 0.1
+        win_moveTo(x, y, duration=dur, tsize=(size, size), inertia=True, curve=curve)
+
     if check_lowskill:
         gui.mouseUp()
         time.sleep(0.3)
@@ -309,16 +463,22 @@ def chain(gear_start, gear_end, background, check_lowskill=False):
             raise ValueError("Battle is too hard for chaining")
         else:
             if moves[i]:
-                win_moveTo(x - 47, y + 60, duration=0.15, tsize=(20, 20), inertia=True)
+                win_moveTo(int(curr_x - half_bin), curr_y - 80, duration=0.2, tsize=(20, 20), inertia=True)
                 gui.mouseDown()
-                win_moveTo(x - 47, y + 190, duration=0.15, tsize=(20, 20), inertia=True)
+                win_moveTo(int(curr_x - half_bin), curr_y + 80, duration=0.2, tsize=(20, 20), inertia=True)
             else:
-                win_moveTo(x - 47, y + 80, duration=0.15, tsize=(20, 20), inertia=True)
+                win_moveTo(int(curr_x - half_bin), curr_y - 80, duration=0.2, tsize=(20, 20), inertia=True)
                 gui.mouseDown()
 
-    win_moveTo(x + 101, y + 131, duration=0.30, tsize=(5, 5), inertia=True)
+    win_moveTo(final_x, final_y, duration=0.30, tsize=(5, 5), inertia=True)
     gui.mouseUp()
 
+def debug_points(points, filename):
+    image = screenshot(region=(0, 0, 1920, 1080))
+    comp = p.WINDOW[2] / 1920
+    for x, y in points:
+        cv2.circle(image, (int(x*comp), int(y*comp)), radius=10, color=(0, 255, 0), thickness=2)
+    cv2.imwrite(filename, image)
 
 def fight(lux=False):
     is_tobattle = now.button("TOBATTLE")
@@ -341,15 +501,17 @@ def fight(lux=False):
             select(p.SELECTED[:6])
 
     print("Entered Battle")
+    win_moveTo(1700, 750)
     p.time_elapsed()
     last_error = 0
     attempts = 0
-    should_winrate = lux or p.WINRATE
+    should_winrate = (lux and not p.is_saikai()) or p.WINRATE
     check_lowskill = p.is_on_hard()
     while True:
         ck = False
-        if loc.button("winrate", wait=1):
-            time.sleep(0.1)
+        gear_start = None
+        if loc.button("winrate", wait=0.8):
+            time.sleep(0.2)
             ck = True
             is_focused = True
             try:
@@ -358,8 +520,8 @@ def fight(lux=False):
                 is_focused = False
                 if should_winrate:
                     raise ValueError("Battle isn't focused but we want to winrate anyway")
-                background = screenshot(region=(round(gear_start[0] + 100), 775, round(gear_end[0] - gear_start[0] - 200), 10))
-                chain(gear_start, gear_end, background, check_lowskill)
+                chain(gear_start, gear_end, check_lowskill)
+                p.EXPECT_CHAIN = True
                 check_lowskill = False
 
                 # success check
@@ -375,14 +537,29 @@ def fight(lux=False):
                 if check_lowskill:
                     should_winrate = True
                 gui.press("p", 1, 0.1)
-                time.sleep(0.3)
+                time.sleep(0.2)
+                
+                if is_focused and not loc.button("winrate_on", "winrate", wait=1, method=cv2.TM_SQDIFF_NORMED):
+                    win_click(1400, 930)
 
-                if is_focused and not loc.button("winrate_on", "winrate", wait=2, method=cv2.TM_SQDIFF_NORMED):
-                    win_click(1385, 930)
+                if not lux and p.is_on_hard():
+                    select_ego()
+                if lux and p.is_saikai() and not is_solo((100, 990), (1820, 990)):
+                    ryoshu_x = get_saikai_ryoshu()
+                    if ryoshu_x and 0 <= ryoshu_x:
+                        win_click(ryoshu_x, 990)
+                        win_moveTo(200, 990)
 
-                if not lux and p.is_on_hard(): select_ego()
                 gui.press("enter", 1, 0.1)
                 time.sleep(0.5)
+
+        if p.EXPECT_CHAIN:
+            if gear_start:
+                gx, gy = gear_start
+                win_moveTo(gx-120, gy+120)
+            else:
+                win_moveTo(400, 960)
+            p.EXPECT_CHAIN = False
 
         if now_rgb.button("event"):
             ck = True
@@ -402,7 +579,7 @@ def fight(lux=False):
 
         if now.button("RetryStage"):
             attempts += 1
-            if attempts >= 3:
+            if attempts >= 5:
                 logging.info("Got stuck in hard battle")
                 if not p.RESTART:
                     wait_while_condition(lambda: not now.button("Confirm_retry", method=cv2.TM_SQDIFF_NORMED), lambda: win_click(1200, 400), interval=1, timer=3)
@@ -428,10 +605,18 @@ def fight(lux=False):
 
         for i in exit_if:
             if now.button(i):
-                if i == "loading": loading_halt()
+                if i == "loading":
+                    if not lux:
+                        if p.EXPECT_REWARD:
+                            win_moveTo(1000, 950)
+                        else:
+                            win_moveTo(1600, 400)
+                        p.EXPECT_REWARD = False
+                    loading_halt()
                 print("Battle is over")
                 logging.info("Battle is over")
                 p.time_elapsed()
+                p.EXPECT_ACTION = "grab_card" if p.EXPECT_REWARD else "move"
                 return True
             
         # for i in range(3):
@@ -444,14 +629,14 @@ def fight(lux=False):
         
         if now.button("pause"):
             ck = True
-            time.sleep(1)
+            time.sleep(0.5)
         else:
             time.sleep(0.2)
         
         # stuck check
         if ck == False:
             if last_error != 0:
-                if time.time() - last_error > 50:
+                if time.time() - last_error > 100:
                     raise RuntimeError('Stuck in battle')
             else:
                 last_error = time.time()

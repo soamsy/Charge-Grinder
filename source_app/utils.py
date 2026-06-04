@@ -1,4 +1,4 @@
-import sys, os, json, hashlib, copy
+import sys, os, json, hashlib, copy, signal
 from datetime import datetime, timezone, timedelta
 
 from source_app.run_bridge import RAISE_ERROR

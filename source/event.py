@@ -13,14 +13,15 @@ def event():
     print("event check")
     start_time = time.time()
     while True:
-        if time.time() - start_time > 100: return False
+        if time.time() - start_time > 100:
+            return False
         if p.LIMBUS_NAME not in (win := gui.getActiveWindowTitle()): pause(win)
 
         now_click.button("skip")
         gui.press("space")
         
         if now.button("choices"):
-            time.sleep(0.1)
+            time.sleep(0.05)
             if now_click.button("textNew", "textEGO") and is_choice_made(): continue
             if now_click.button("textLvl", "textEGO") and is_choice_made(): continue
             if any(now_click.button(f"choice_{favorite}", "textEGO") for favorite in favorites) and is_choice_made(): continue
@@ -68,17 +69,18 @@ def event():
         now_click.button("CommenceBattle")
 
         if now.button("check"):
-            matches = {
-                prob: now.button(prob, "probs")
-                for prob in PROBS
-            }
-            if any(matches.values()):
-                for prob in PROBS:
-                    if now_click.button(prob, "probs"):
-                        click.button("Commence")
-                        time.sleep(2)
-                        break
+            time.sleep(0.2)
+            for prob in PROBS:
+                if now_click.button(prob, "probs", search_from_right=True):
+                    if now.button("skip"):
+                        wait_while_condition(lambda: now.button("skip"), lambda: gui.press("space"), timer=2.0)
+                    if click.button("Commence"):
+                        wait_while_condition(lambda: not now.button("skip"), interval=0.1, timer=4.5)
+                        if now_click.button("skip"):
+                            wait_while_condition(lambda: not now.button("Continue"), lambda: gui.press("space"), interval=0.2, timer=8.0)
         
         if now_click.button("Continue"):
+            print("Leaving event")
             connection()
+            p.EXPECT_ACTION = "move"
             return True

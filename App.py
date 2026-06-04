@@ -21,6 +21,7 @@ class MyApp(QWidget):
         self.count = 0
         self.team = 0
         self.sinners = []
+        self.team_mods = Bot.DEFAULT_TEAM_MODS()
 
         self.is_lux = False
         self.is_proceed = False
@@ -52,6 +53,10 @@ class MyApp(QWidget):
     def load_settings(self):
         self.sm = SettingsManager(error_handler=self.show_error, hard=lambda: self.hard)
         self.sinner_selections = {i: self.sm.get_team(i) for i in range(17)}
+        self.load_team_mods()
+
+    def load_team_mods(self):
+        self.team_mods = self.sm.get_team_mods(Bot.DEFAULT_TEAM_MODS())
 
     def show_error(self, message):
         QTimer.singleShot(0, lambda: self._show_blocking_error(message))
@@ -376,8 +381,7 @@ class MyApp(QWidget):
         self.avoid_floors = {}
         self.set_card_buttons([])
         self.activate_ego_gifts({})
-        buff = [1, 0, 1, 1, 0,
-                0, 0, 1, 0, 0]
+        buff = [1 if i in Bot.DEFAULT_GRACE else 0 for i in range(10)]
         if self.hard:
             on = [False, True, False, False, False, False, False]
             self.set_buttons_active(on + buff)
@@ -401,9 +405,9 @@ class MyApp(QWidget):
     def get_team_data(self, team):
         affinity = self.selected_affinity[team][0]
         if self.hard:
-            return Bot.HARD[list(Bot.TEAMS.keys())[affinity]]
+            return Bot.HARD[list(Bot.HARD.keys())[affinity]]
         else:
-            return Bot.TEAMS[list(Bot.HARD.keys())[affinity]]
+            return Bot.TEAMS[list(Bot.TEAMS.keys())[affinity]]
 
     def get_priority(self, team):
         return self.get_team_data(team).get(f"floors", [])
@@ -652,7 +656,6 @@ class MyApp(QWidget):
                 'state': 2,
                 'click_handler': self.set_hardmode,
                 'icon': Bot.APP_PTH['normal4hard1'],
-                'icon_cache': [Bot.APP_PTH['hard']],
             }),
 
             'log': CustomButton(self, {
@@ -685,7 +688,18 @@ class MyApp(QWidget):
                 'glow': Bot.APP_PTH['me'],
                 'glow_geometry': (610, 26, 47, 47),
                 'click_handler': lambda: webbrowser.open('https://github.com/Walpth/Charge-Grinder')
-            })
+            }),
+            
+            'saikai': CustomButton(self, {
+                'geometry': (354, 455, 35, 35),
+                'icon': Bot.APP_PTH['saikai_off'],
+                'glow': Bot.APP_PTH['saikai_on'],
+                'checkable': True,
+                'checked': False,
+                'glow_on_checked': True,
+                'glow_duration': 150,
+                'click_handler': self.apply_saikai,
+            }),
         }
         all_buttons = self._get_keyword_icon() + self._get_button_affinity() + self._get_button_selected() + self._get_button_keyword()
         for name, settings in all_buttons:
@@ -706,13 +720,13 @@ class MyApp(QWidget):
             self.buttons[name] = CustomButton(self.grace_panel, settings)
 
         self.buttons['update'].hide()
+        self.buttons['saikai'].raise_()
         self.check_version()
 
         self.set_team()
         self.set_extra()
         self.priority_team.setPixmap(QPixmap(Bot.APP_PTH[f'team{self.selected_affinity[self.team][0]}']))
         self.load_priority()
-
         self.init_widgets()
         self.set_widgets()
         self.set_selected_buttons(self.sinner_selections[self.team])
@@ -827,6 +841,12 @@ class MyApp(QWidget):
         self.set_buttons_active(self.sm.get_config(8))
         self.set_card_buttons(self.sm.get_config(9))
 
+    def get_team(self):
+        if self.is_lux:
+            return self.team_lux + 7
+        else:
+            return self.team
+
     def set_lux(self):
         self.lux.show()
         self.lux.raise_()
@@ -867,6 +887,7 @@ class MyApp(QWidget):
             team = self.team
         self.update_sinners()
         self.sm.set_team(team, self.sinners)
+        self.sm.set_team_mods(self.team_mods)
         self.sm.save_settings()
     
     def reset(self):
@@ -1107,6 +1128,16 @@ class MyApp(QWidget):
     def change_icon(self, id):
         self.buttons[f'icon{self.team}'].setIcon(QIcon(Bot.APP_PTH[f"t{id}"]))
         self.priority_team.setPixmap(QPixmap(Bot.APP_PTH[f'team{id}']))
+    
+    def apply_saikai(self):
+        sender = self.sender()
+        if not sender or not isinstance(sender, QPushButton):
+            return
+
+        if sender.isChecked():
+            self.team_mods[self.get_team()]['saikai'] = True
+        else:
+            self.team_mods[self.get_team()].pop('saikai', None)
 
     def update_button_icons(self):
         sender = self.sender()
@@ -1233,6 +1264,9 @@ class MyApp(QWidget):
             if key.startswith("sel"):
                 button.setChecked(False)
                 button.setIcon(QIcon())
+            if key == 'saikai':
+                shouldBeChecked = self.get_team() in self.team_mods and 'saikai' in self.team_mods[self.get_team()]
+                button.setCheckedGlow(shouldBeChecked)
 
         for index, button in enumerate(self.selected_button_order):
             icon_path = Bot.APP_PTH[f'sel{index + 1}']
@@ -1260,7 +1294,7 @@ class MyApp(QWidget):
 
     def set_card_buttons(self, button_keys: list):
         self.selected_card_order.clear()
-        if not button_keys: button_keys = [0, 2, 1, 3, 4]
+        if not button_keys: button_keys = [2, 0, 1, 4, 3]
         self.selected_card_order = [self.buttons[f'card{key+1}'] for key in button_keys]
 
         # First uncheck all selectable buttons
@@ -1358,6 +1392,7 @@ class MyApp(QWidget):
             for i in self.team_lux_buttons:
                 if i is not None:
                     self.teams[i + 7] = {"sinners": self.sinner_selections[i + 7]}
+                    self.teams[i + 7]["mods"] = self.team_mods[i + 7] if (i + 7) in self.team_mods else {}
         if not self.is_lux or self.is_proceed:
             if not self.is_lux: self.sinner_selections[self.team] = self.sinners
             for index in range(7):
@@ -1378,9 +1413,9 @@ class MyApp(QWidget):
                         "priority_normal": (priority_n, priority_f_n),
                         "avoid_normal": (avoid_n, priority_f_n, avoid_f_n),
                         "priority_hard": (priority_h, priority_f_h),
-                        "avoid_hard": (avoid_h, priority_f_h, avoid_f_h)
+                        "avoid_hard": (avoid_h, priority_f_h, avoid_f_h),
+                        "mods" : self.team_mods[i] if i in self.team_mods else {},
                     }
-
 
         self.settings = {
             'bonus'      : self.buttons['on0'].isChecked() if not self.is_lux else self.buttons['on10'].isChecked(),
@@ -1545,6 +1580,7 @@ class ScrollableMyApp(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     window = ScrollableMyApp()
     window.show()
     sys.exit(app.exec())

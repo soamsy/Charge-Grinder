@@ -68,10 +68,14 @@ class SettingsManager(QObject):
     
     def get_team(self, key):
         teams = self.data.get("TEAMS", {})
-        return teams.get(str(key), [])
+        return teams.get(str(key), [3, 9, 5, 2, 1, 7, 0, 10])
     
     def get_aff(self):
         return self.data.get("AFFINITY", {})
+
+    def get_team_mods(self, default={}):
+        mods = self.data.get("TEAM_MODS", default)
+        return { int(k): v for k, v in mods.items() }
     
     def get_extra(self):
         return self.data.get("EXTRA", [])
@@ -93,6 +97,9 @@ class SettingsManager(QObject):
 
     def set_aff(self, state):
         self.data["AFFINITY"] = state
+    
+    def set_team_mods(self, team_mods):
+        self.data["TEAM_MODS"] = team_mods
 
     def set_config(self, key, value_list):
         name = self.config
@@ -117,7 +124,7 @@ class SettingsManager(QObject):
     
     def verify_file_data(self, data):
         corrupted_data = set()
-        main_entries = {"CONFIG", "HARD", "TEAMS", "AFFINITY", "EXTRA"}
+        main_entries = {"CONFIG", "HARD", "TEAMS", "AFFINITY", "TEAM_MODS", "EXTRA"}
         data = self.clean_entries(data, main_entries)
 
         configs = set(data.keys()) & {"CONFIG", "HARD"}
@@ -273,6 +280,19 @@ class SettingsManager(QObject):
         elif not isinstance(data["AFFINITY"], dict) or not is_valid_affinity_structure(data["AFFINITY"]):
             corrupted_data.add("team/affinity selection")
             del data["AFFINITY"]
+
+        def is_valid_team_mods_structure(team_mods):
+            for i in range(0, 15):
+                if not str(i) in team_mods:
+                    return False
+                if not isinstance(team_mods[str(i)], dict):
+                    return False
+            return True
+
+        if "TEAM_MODS" not in data: pass
+        elif not isinstance(data["TEAM_MODS"], dict) or not is_valid_team_mods_structure(data["TEAM_MODS"]):
+            corrupted_data.add("team/team mods")
+            del data["TEAM_MODS"]
 
         def is_valid_extra_structure(extra_data):
             if not (isinstance(extra_data, list) and len(extra_data) == 8):
