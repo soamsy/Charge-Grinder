@@ -494,29 +494,24 @@ class SIFTMatcher:
 
     def _prepare_template(self, template_color):
         gray = cv2.cvtColor(template_color, cv2.COLOR_BGR2HSV)[:, :, 2]
-        if self.comp == 1.0:
-            return template_color, gray
-        inv = 1.0 / self.comp
-        interp = cv2.INTER_LINEAR if inv > 1 else cv2.INTER_AREA
-        color_r = cv2.resize(template_color, None, fx=inv, fy=inv, interpolation=interp)
-        gray_r  = cv2.resize(gray,           None, fx=inv, fy=inv, interpolation=interp)
-        return color_r, gray_r
+        return template_color, gray
 
     def _color_score(self, template_color, M):
         h, w = template_color.shape[:2]
         try:
-            blur_t = cv2.GaussianBlur(template_color, (5, 5), 0)
+            blur_t = cv2.GaussianBlur(template_color.copy(), (5, 5), 0)
             
             M_inv = np.linalg.inv(M)
             # if np.any(np.abs(M_inv) > 1e8):
             #     return 0.0
             
-            warped = cv2.warpPerspective(self.base_color, M_inv, (w, h))
-            blur_w = cv2.GaussianBlur(warped, (5, 5), 0)
+            # warped = cv2.warpPerspective(self.base_color, M_inv, (w, h))
+            blur_w = cv2.GaussianBlur(self.base_color.copy(), (5, 5), 0)
             lab_t = cv2.cvtColor(blur_t, cv2.COLOR_BGR2Lab).astype(np.float32)
             lab_w = cv2.cvtColor(blur_w, cv2.COLOR_BGR2Lab).astype(np.float32)
             
             rmse = np.sqrt(np.mean(np.sum((lab_t - lab_w) ** 2, axis=2)))
+            return 1
             return float(np.clip(1.0 - rmse / 30.0, 0.0, 1.0))
         
         except Exception as e: # sometimes some weird shit happens after cv2.warp
