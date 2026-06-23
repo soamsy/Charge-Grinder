@@ -4,68 +4,85 @@ TEAMS = {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"hellterfly": 2, "fiery": 2},
-        "uptie2" : {"glimpse": 4},
-        "uptie3" : {},
-        "uptie_cap" : {"fiery": 1},
-        "goal"   : ["soothe"],
-        "fuse1"  : {"stew": 2, "paraffin": 1}, # book
-        "fuse2"  : {"book": None, "dust": 3, "ash": 1}, # soothe
-        "fuse_ex": {},
+        "upties": [
+            {"hellterfly": 2},
+            {"fiery": 2},
+            {"glimpse": 4},
+        ],
+        "tiered_fusions": [
+            {"glimpse": 4},   
+        ],
+        "strict_fusions": [
+            {"book": { "paraffin": 1, "stew": 2 }},
+            {"soothe": {"book": -1, "dust": 3, "ash": 1}},
+        ],
         "buy"    : ["glimpse", "wing", "dust", "stew", "paraffin", "ash", "hellterfly", "fiery"], # order is important
         "all"    : ["glimpse", "dust", "stew", "paraffin", "ash", "book", "hellterfly", "fiery", "wing", "soothe", "disk"],
         "sin"    : True
     },
 
-    # Bleed
     "BLEED": {
         "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"clerid": 2}, # wolf
-        "uptie2" : {"redstained": 4, "gossypium": 2},
-        "uptie3" : {"muzzle": 1},
-        "uptie_cap" : {},
-        "goal"   : ["redmist"],
-        "fuse1"  : {"millarca": 2, "hymn": 1}, # devotion
-        "fuse2"  : {"devotion": None, "smokeswires": 3, "muzzle": 1}, # redmist 
-        "fuse_ex": {"gossypium": 2},
+        "upties": [
+            {"clerid": 2},
+            {"redstained": 4},
+            {"gossypium": 2},
+            {"muzzle": 1},
+        ],
+        "tiered_fusions": [
+            {"redstained": 4},
+            {"gossypium": 2},
+        ],
+        "strict_fusions": [
+            {"devotion": {"millarca": 2, "hymn": 1} },
+            {"redmist": {"devotion": None, "smokeswires": 3, "muzzle": 1}},
+        ],
         "buy"    : ["redstained", "gossypium", "smokeswires", "millarca", "muzzle", "hymn", "contaminatedneedle", "fracturedblade", "scripture", "rustedknife", "clerid"],
         "all"    : ["clerid", "wolf", "devotion", "redmist", "redstained", "gossypium", "smokeswires", "millarca", "muzzle", "hymn", "contaminatedneedle", "fracturedblade", "scripture", "rustedknife"],
         "sin"    : True
     },
 
-    # Tremor
     "TREMOR": {
         "checks" : ["Tremor", "smallTremor", (755, 370), "reTremor", "bigTremor", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"bracelet": 2, "reverberation": 2},
-        "uptie2" : {"downpour": 4},
-        "uptie3" : {"truthbell": 3},
-        "uptie_cap" : {},
-        "goal"   : ["oscillation"],
-        "fuse1"  : {}, 
-        "fuse2"  : {"truthbell": 3, "cogs": 2, "nixie": 1}, # oscillation
-        "fuse_ex": {"eyeball": 3}, 
+        "upties": [
+            {"bracelet": 2},
+            {"reverberation": 2},
+            {"downpour": 4},
+            {"truthbell": 3},
+        ],
+        "tiered_fusions": [
+            {"downpour": 4},
+            {"eyeball": 3},
+        ],
+        "strict_fusions": [
+            {"oscillation": {"truthbell": 3, "cogs": 2, "nixie": 1}},
+        ],
         "buy"    : ["downpour", "truthbell", "cogs", "nixie", "synaesthesia", "spanner", "clockwork", "biovial", "eyeball", "bracelet", "reverberation"],
         "all"    : ["oscillation", "bracelet", "reverberation", "downpour", "truthbell", "cogs", "nixie", "synaesthesia", "spanner", "clockwork", "biovial", "eyeball"],
         "sin"    : True
     },
 
-    # Rupture
     "RUPTURE": {
         "checks" : ["Rupture", "smallRupture", (975, 370), "reRupture", "bigRupture", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"lamp": 2}, # "thunderbranch" "lasso"
-        "uptie2" : {"thrill": 4, "thunderbranch": 3},
-        "uptie3" : {"bundle": 1},
-        "uptie_cap" : {},
-        "goal"   : ["trance"],
-        "fuse1"  : {},
-        "fuse2"  : {"battery": 3, "rope": 2, "bundle": 1}, # trance
-        "fuse_ex": {"thunderbranch": 3}, 
+        "upties": [
+            {"lamp": 2},
+            {"thrill": 4},
+            {"thunderbranch": 3},
+            {"bundle": 1},
+        ],
+        "tiered_fusions": [
+            {"thrill": 4},
+            {"thunderbranch": 3},
+        ],
+        "strict_fusions": [
+            {"trance": {"battery": 3, "rope": 2, "bundle": 1}},
+        ],
         "buy"    : ["thrill", "breast", "thunderbranch", "battery", "rope", "bundle", "umbrella", "lamp"],
         "all"    : ["thrill", "lasso", "lamp", "breast", "battery", "rope", "thunderbranch", "brooch", "bundle", "trance", "umbrella"],
         "sin"    : True
@@ -76,14 +93,16 @@ TEAMS = {
         "checks" : ["Sinking", "smallSinking", (315, 665), "reSinking", "bigSinking", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"redorder": 2},
-        "uptie2" : {"artisticsense": 4},
-        "uptie3" : {},
-        "uptie_cap" : {},
-        "goal"   : ["musicsheet"],
-        "fuse1"  : {},
-        "fuse2"  : {"midwinter": 3, "tangledbones": 2, "headlessportrait": 1}, # musicsheet
-        "fuse_ex": {},    
+        "upties": [
+            {"redorder": 2},
+            {"artisticsense": 4},
+        ],
+        "tiered_fusions": [
+            {"artisticsense": 4},
+        ],
+        "strict_fusions": [
+            {"musicsheet": {"midwinter": 3, "tangledbones": 2, "headlessportrait": 1}},
+        ],
         "buy"    : ["musicsheet", "midwinter", "tangledbones", "headlessportrait", "compass", "crumbs", "meltedspring", "redorder"],
         "all"    : ["redorder", "meltedspring", "artisticsense", "musicsheet", "midwinter", "tangledbones", "headlessportrait", "compass", "crumbs"],
         "sin"    : True
@@ -94,14 +113,20 @@ TEAMS = {
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"stonetomb": 2}, # holder
-        "uptie2" : {"clearmirror": 4, "nebulizer": 2, "devil": 1},
-        "uptie3" : {},
-        "uptie_cap" : {},
-        "goal"   : ["luckypouch"],
-        "fuse1"  : {"recollection": 2, "pendant": 1},
-        "fuse2"  : {"reminiscence": None, "clover": 3, "horseshoe": 1}, # luckypouch 
-        "fuse_ex": {"nebulizer": 2}, 
+        "upties": [
+            {"stonetomb": 2},
+            {"clearmirror": 4},
+            {"nebulizer": 2},
+            {"devil": 1},
+        ],
+        "tiered_fusions": [
+            {"clearmirror": 4},
+            {"nebulizer": 2},
+        ],
+        "strict_fusions": [
+            {"reminiscence": {"recollection": 2, "pendant": 1}},
+            {"luckypouch": {"reminiscence": -1, "clover": 3, "horseshoe": 1}},
+        ],
         "buy"    : ["clearmirror", "nebulizer", "clover", "recollection", "pendant", "horseshoe", "bamboohat", "brokenblade", "finifugality", "devil"],
         "all"    : ["luckypouch", "stonetomb", "holder", "reminiscence", "clearmirror", "nebulizer", "clover", "recollection", "pendant", "horseshoe", "bamboohat", "brokenblade", "finifugality", "devil"],
         "sin"    : True
@@ -112,14 +137,19 @@ TEAMS = {
         "checks" : ["Charge", "smallCharge", (755, 665), "reCharge", "bigCharge", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"employeecard": 2, "batterysocket": 2},
-        "uptie2" : {"gloves": 4, "vitae": 1},
-        "uptie3" : {"wristguards": 1},
-        "uptie_cap" : {},
-        "goal"   : ["T-1"],
-        "fuse1"  : {},
-        "fuse2"  : {"forcefield": 3, "bolt": 2, "wristguards": 1}, # T-1
-        "fuse_ex": {},   
+        "upties": [
+            {"employeecard": 2},
+            {"batterysocket": 2},
+            {"gloves": 4},
+            {"vitae": 1},
+            {"wristguards": 1},
+        ],
+        "tiered_fusions": [
+            {"gloves": 4},
+        ],
+        "strict_fusions": [
+            {"T-1": {"forcefield": 3, "bolt": 2, "wristguards": 1}},
+        ],
         "buy"    : ["gloves", "forcefield", "bolt", "wristguards", "imitativegenerator", "vitae", "employeecard", "batterysocket"],
         "all"    : ["employeecard", "batterysocket", "T-1", "gloves", "forcefield", "bolt", "wristguards", "imitativegenerator", "vitae"],
         "sin"    : True
@@ -129,13 +159,14 @@ TEAMS = {
         "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"shortcane": 2},
-        "uptie2" : {"slashmemory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"shortcane": 2},
+            {"slashmemory": 4},
+        ],
+        "tiered_fusions": [
+            {"slashmemory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["slashmemory"],
         "all"    : ["shortcane", "slashmemory"],
         "sin"    : False
@@ -145,13 +176,14 @@ TEAMS = {
         "checks" : ["Pierce", "smallPierce", (315, 840), "rePierce", "bigPierce", 1],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {"plumeproof": 2},
-        "uptie2" : {"piercememory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"plumeproof": 2},
+            {"piercememory": 4},
+        ],
+        "tiered_fusions": [
+            {"piercememory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["piercememory"],
         "all"    : ["plumeproof", "piercememory"],
         "sin"    : False
@@ -161,13 +193,13 @@ TEAMS = {
         "checks" : ["Blunt", "smallBlunt", (535, 840), "reBlunt", "bigBlunt", 0],
         "floors" : ["FlatbrokeGamblers", "toClaimTheirBones", "ACertainWorld", "HatredandDespair", "HellsChicken", "TobeCleaved"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2, "HatredandDespair": 3 },
-        "uptie1" : {},
-        "uptie2" : {"bluntmemory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"bluntmemory": 4},
+        ],
+        "tiered_fusions": [
+            {"bluntmemory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["bluntmemory"],
         "all"    : ["bluntmemory"],
         "sin"    : False
@@ -180,91 +212,94 @@ HARD = {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"hellterfly": 2, "fiery": 2},
-        "uptie2" : {"glimpse": 4},
-        "uptie3" : {"polarization": 1},
-        "uptie_cap" : {},
-        "goal"   : ["soothe", "purloinedflame"],
-        "fuse1"  : {"stew": 2, "paraffin": 1}, # book
-        "fuse2"  : {"book": None, "dust": 3, "ash": 1}, # soothe
-
-        "fuse3"  : {},
-        "fuse4"  : {"disk": 3, "hearthflame": 2, "intellect": 1}, # purloinedflame
-
-        "fuse_ex": {},
-
+        "upties": [
+            {"hellterfly": 2},
+            {"fiery": 2},
+            {"glimpse": 4},
+            {"polarization": 1},
+        ],
+        "tiered_fusions": [
+            {"glimpse": 4},   
+        ],
+        "strict_fusions": [
+            {"book": { "paraffin": 1, "stew": 2 }},
+            {"soothe": {"book": -1, "dust": 3, "ash": 1}},
+            {"purloinedflame"  : {"disk": 3, "hearthflame": 2, "intellect": 1}},
+        ],
         "buy"    : ["glimpse", "wing", "dust", "stew", "paraffin", "ash", "disk", "hearthflame", "intellect", "hellterfly", "fiery"], # order is important
         "all"    : ["glimpse", "dust", "stew", "paraffin", "ash", "book", "hellterfly", "fiery", "wing", "soothe",
                     "purloinedflame", "disk", "hearthflame", "intellect", "polarization"],
         "sin"    : True
     },
-
-    # Bleed
     "BLEED": {
         "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"clerid": 2}, # wolf
-        "uptie2" : {"redstained": 4, "gossypium": 2},
-        "uptie3" : {"muzzle": 1},
-        "uptie_cap" : {},
-        "goal"   : ["redmist", "hemorrhagicshock"],
-        "fuse1"  : {"millarca": 2, "hymn": 1}, # devotion
-        "fuse2"  : {"devotion": None, "smokeswires": 3, "muzzle": 1}, # redmist
-
-        "fuse3"  : {},
-        "fuse4"  : {"bloodsack": 3, "rustedknife": 3, "ironstake": 1}, # hemorrhagicshock
-
-        "fuse_ex": {"gossypium": 2},
-
+        "upties": [
+            {"clerid": 2},
+            {"redstained": 4},
+            {"gossypium": 2},
+            {"muzzle": 1},
+        ],
+        "tiered_fusions": [
+            {"redstained": 4},
+            {"gossypium": 2},
+        ],
+        "strict_fusions": [
+            {"devotion": {"millarca": 2, "hymn": 1} },
+            {"redmist": {"devotion": None, "smokeswires": 3, "muzzle": 1}},
+            {"hemorrhagicshock": {"bloodsack": 3, "rustedknife": 3, "ironstake": 1}},
+        ],
         "buy"    : ["redstained", "gossypium", "smokeswires", "millarca", "muzzle", "hymn", "bloodsack", "rustedknife", "ironstake", "contaminatedneedle", "fracturedblade", "scripture", "clerid"],
         "all"    : ["clerid", "wolf", "devotion", "redmist", "redstained", "gossypium", "smokeswires", "millarca", "muzzle", "hymn", "contaminatedneedle", 
                     "fracturedblade", "scripture", "hemorrhagicshock", "rustedknife", "bloodsack", "ironstake"],
         "sin"    : True
     },
 
-    # Tremor
     "TREMOR": {
         "checks" : ["Tremor", "smallTremor", (755, 370), "reTremor", "bigTremor", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"bracelet": 2, "reverberation": 2},
-        "uptie2" : {"downpour": 4},
-        "uptie3" : {"truthbell": 3},
-        "uptie_cap" : {},
-        "goal"   : ["oscillation", "vibrobell"],
-        "fuse1"  : {},
-        "fuse2"  : {"truthbell": 3, "cogs": 2, "nixie": 1}, # oscillation
-
-        "fuse3"  : {"wobblingkeg": 2, "gemstone": 1}, # epicenter
-        "fuse4"  : {"epicenter": None, "clockwork": 3, "venomousskin": 1}, # vibrobell
-
-        "fuse_ex": {"eyeball": 3}, 
-
+        "upties": [
+            {"bracelet": 2},
+            {"reverberation": 2},
+            {"downpour": 4},
+            {"truthbell": 3},
+        ],
+        "tiered_fusions": [
+            {"downpour": 4},
+            {"eyeball": 3},
+        ],
+        "strict_fusions": [
+            {"oscillation": {"truthbell": 3, "cogs": 2, "nixie": 1}},
+            {"epicenter": {"wobblingkeg": 2, "gemstone": 1}},
+            {"vibrobell": {"epicenter": None, "clockwork": 3, "venomousskin": 1}}
+        ],
         "buy"    : ["downpour", "truthbell", "cogs", "nixie", "clockwork", "wobblingkeg", "gemstone", "venomousskin", "synaesthesia", "spanner", "biovial", "eyeball", "bracelet", "reverberation"],
         "all"    : ["oscillation", "bracelet", "reverberation", "downpour", "truthbell", "cogs", "nixie", "synaesthesia", "spanner", 
                     "clockwork", "biovial", "eyeball", "vibrobell", "epicenter", "venomousskin", "wobblingkeg", "gemstone"],
         "sin"    : True
     },
 
-    # Rupture
     "RUPTURE": {
         "checks" : ["Rupture", "smallRupture", (975, 370), "reRupture", "bigRupture", 1],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"lamp": 2}, # "thunderbranch" "lasso"
-        "uptie2" : {"thrill": 4},
-        "uptie3" : {"thunderbranch": 3, "bundle": 1},
-        "uptie_cap" : {},
-        "goal"   : ["trance", "ruin"],
-        "fuse1"  : {},
-        "fuse2"  : {"battery": 3, "rope": 2, "bundle": 1}, # trance
-        
-        "fuse3"  : {"apocalypse": 2, "bonestake": 1}, # effigy
-        "fuse4"  : {"effigy": None, "thunderbranch": 3, "gun": 1}, # ruin
-
-        "fuse_ex": {},  
-
+        "upties": [
+            {"lamp": 2},
+            {"thrill": 4},
+            {"thunderbranch": 3},
+            {"bundle": 1},
+        ],
+        "tiered_fusions": [
+            {"thrill": 4},
+            {"thunderbranch": 3},
+        ],
+        "strict_fusions": [
+            {"trance": {"battery": 3, "rope": 2, "bundle": 1}},
+            {"effigy": {"apocalypse": 2, "bonestake": 1}},
+            {"ruin": {"effigy": -1, "thunderbranch": 3, "gun": 1}},
+        ],
         "buy"    : ["thrill", "breast", "thunderbranch", "battery", "rope", "apocalypse", "bundle", "bonestake", "gun", "umbrella", "lamp"],
         "all"    : ["thrill", "lasso", "lamp", "breast", "battery", "rope", "thunderbranch", "brooch", "bundle", "trance", "umbrella",
                     "ruin", "effigy", "gun", "apocalypse", "bonestake"],
@@ -276,19 +311,18 @@ HARD = {
         "checks" : ["Sinking", "smallSinking", (315, 665), "reSinking", "bigSinking", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"redorder": 2},
-        "uptie2" : {"artisticsense": 4},
-        "uptie3" : {},
-        "uptie_cap" : {},
-        "goal"   : ["musicsheet", "wave"],
-        "fuse1"  : {},
-        "fuse2"  : {"midwinter": 3, "tangledbones": 2, "headlessportrait": 1}, # musicsheet
-
-        "fuse3"  : {"overcoat": 2, "cantabile": 1},
-        "fuse4"  : {"globe": None, "distantstar": 3, "thornypath": 1}, # wave
-
-        "fuse_ex": {},  
-
+        "upties": [
+            {"redorder": 2},
+            {"artisticsense": 4},
+        ],
+        "tiered_fusions": [
+            {"artisticsense": 4},
+        ],
+        "strict_fusions": [
+            {"musicsheet": {"midwinter": 3, "tangledbones": 2, "headlessportrait": 1}},
+            {"globe": {"overcoat": 2, "cantabile": 1}},
+            {"wave": {"globe": -1, "distantstar": 3, "thornypath": 1}},
+        ],
         "buy"    : ["musicsheet", "midwinter", "tangledbones", "headlessportrait", "distantstar", "overcoat", "cantabile", "thornypath", "compass", "crumbs", "redorder"],
         "all"    : ["redorder", "meltedspring", "artisticsense", "musicsheet", "midwinter", "tangledbones", "headlessportrait", "compass", "crumbs",
                     "wave", "globe", "distantstar", "thornypath", "overcoat", "cantabile"],
@@ -300,19 +334,21 @@ HARD = {
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"stonetomb": 2}, # holder
-        "uptie2" : {"clearmirror": 4, "nebulizer": 2},
-        "uptie3" : {"devil": 1},
-        "uptie_cap" : {},
-        "goal"   : ["luckypouch", "spirits"],
-        "fuse1"  : {"recollection": 2, "pendant": 1},
-        "fuse2"  : {"reminiscence": None, "clover": 3, "horseshoe": 1}, # luckypouch
-
-        "fuse3"  : {},
-        "fuse4"  : {"endorphinkit": 3, "angel": 2, "devil": 1}, # spirits
-
-        "fuse_ex": {"nebulizer": 2},
-
+        "upties": [
+            {"stonetomb": 2},
+            {"clearmirror": 4},
+            {"nebulizer": 2},
+            {"devil": 1},
+        ],
+        "tiered_fusions": [
+            {"clearmirror": 4},
+            {"nebulizer": 2},
+        ],
+        "strict_fusions": [
+            {"reminiscence": {"recollection": 2, "pendant": 1}},
+            {"luckypouch": {"reminiscence": -1, "clover": 3, "horseshoe": 1}},
+            {"spirits": {"endorphinkit": 3, "angel": 2, "devil": 1}},
+        ],
         "buy"    : ["clearmirror", "nebulizer", "clover", "recollection", "pendant", "horseshoe", "endorphinkit", "angel", "devil", "bamboohat", "brokenblade", "finifugality"],
         "all"    : ["luckypouch", "stonetomb", "holder", "reminiscence", "clearmirror", "nebulizer", "clover", "recollection", "pendant", 
                     "horseshoe", "bamboohat", "brokenblade", "finifugality", "spirits", "endorphinkit", "angel", "devil"],
@@ -324,19 +360,21 @@ HARD = {
         "checks" : ["Charge", "smallCharge", (755, 665), "reCharge", "bigCharge", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"employeecard": 2, "batterysocket": 2},
-        "uptie2" : {"gloves": 4},
-        "uptie3" : {"wristguards": 1, "vitae": 1},
-        "uptie_cap" : {},
-        "goal"   : ["T-1", "T-5"],
-        "fuse1"  : {},
-        "fuse2"  : {"forcefield": 3, "bolt": 2, "wristguards": 1}, # T-1
-
-        "fuse3"  : {"minitelepole": 2, "UPS": 1}, # insulator
-        "fuse4"  : {"insulator": None, "rod": 3, "vitae": 1}, # T-5
-
-        "fuse_ex": {}, 
-
+        "upties": [
+            {"employeecard": 2},
+            {"batterysocket": 2},
+            {"gloves": 4},
+            {"vitae": 1},
+            {"wristguards": 1},
+        ],
+        "tiered_fusions": [
+            {"gloves": 4},
+        ],
+        "strict_fusions": [
+            {"T-1": {"forcefield": 3, "bolt": 2, "wristguards": 1}},
+            {"insulator": {"minitelepole": 2, "UPS": 1}},
+            {"T-5": {"insulator": -1, "rod": 3, "vitae": 1}},
+        ],
         "buy"    : ["gloves", "forcefield", "bolt", "wristguards", "minitelepole", "rod", "vitae", "UPS", "imitativegenerator", "employeecard", "batterysocket"],
         "all"    : ["employeecard", "batterysocket", "T-1", "gloves", "forcefield", "bolt", "wristguards", "imitativegenerator",
                     "T-5", "insulator", "rod", "vitae", "minitelepole", "UPS"],
@@ -347,15 +385,14 @@ HARD = {
         "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"shortcane": 2},
-        "uptie2" : {"slashmemory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse3"  : {},
-        "fuse4"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"shortcane": 2},
+            {"slashmemory": 4},
+        ],
+        "tiered_fusions": [
+            {"slashmemory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["slashmemory"],
         "all"    : ["shortcane", "slashmemory"],
         "sin"    : False
@@ -365,15 +402,14 @@ HARD = {
         "checks" : ["Pierce", "smallPierce", (315, 840), "rePierce", "bigPierce", 1],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {"plumeproof": 2},
-        "uptie2" : {"piercememory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse3"  : {},
-        "fuse4"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"plumeproof": 2},
+            {"piercememory": 4},
+        ],
+        "tiered_fusions": [
+            {"piercememory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["piercememory"],
         "all"    : ["plumeproof", "piercememory"],
         "sin"    : False
@@ -383,15 +419,13 @@ HARD = {
         "checks" : ["Blunt", "smallBlunt", (535, 840), "reBlunt", "bigBlunt", 0],
         "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
-        "uptie1" : {},
-        "uptie2" : {"bluntmemory": 4},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse3"  : {},
-        "fuse4"  : {},
-        "fuse_ex": {},
+        "upties": [
+            {"bluntmemory": 4},
+        ],
+        "tiered_fusions": [
+            {"bluntmemory": 4},
+        ],
+        "strict_fusions": [],
         "buy"    : ["bluntmemory"],
         "all"    : ["bluntmemory"],
         "sin"    : False
@@ -401,61 +435,24 @@ HARD = {
 CUSTOM_TEAMS = {
     "SAIKAI": [{
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
-        "uptie1" : {"stonetomb": 2},
-        "uptie2" : {"clearmirror": 4},
-        "uptie3" : {"nebulizer": 2},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-        "fuse_ex": {},
-        "buy"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "pendant", "emerald"],
-        "all"    : ["stonetomb", "holder", "clearmirror", "nebulizer", "pendant", "horseshoe", "endorphinkit"],
+        "upties": [
+            {"stonetomb": 2},
+            {"clearmirror": 4},
+        ],
+        "tiered_fusions": [
+            {"clearmirror": 4},
+        ],
+        "strict_fusions": [],
+        "buy"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "emerald"],
+        "all"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "emerald"],
         "sin"    : True
-    # }, {
-    #     "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
-    #     "uptie1" : {},
-    #     "uptie2" : {},
-    #     "uptie3" : {},
-    #     "uptie_cap" : {},
-    #     "goal"   : [],
-    #     "fuse1"  : {},
-    #     "fuse2"  : {},
-    #     "fuse_ex": {},
-    #     "buy"    : ["contaminatedneedle"],
-    #     "all"    : ["contaminatedneedle"],
-    #     "sin"    : False
-    }
-    # , {
-    #     "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
-    #     "uptie1" : {},
-    #     "uptie2" : {},
-    #     "uptie_cap" : {},
-    #     "goal"   : [],
-    #     "fuse1"  : {},
-    #     "fuse2"  : {},
-    #     "fuse3"  : {},
-    #     "fuse4"  : {},
-    #     "fuse_ex": {},
-    #     "buy"    : [],
-    #     "all"    : [],
-    #     "sin"    : False
-    # }
-    , {
+    }, {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
-        "uptie1" : {},
-        "uptie2" : {},
-        "uptie3" : {"polarization": 1},
-        "uptie_cap" : {},
-        "goal"   : [],
-        "fuse1"  : {},
-        "fuse2"  : {},
-
-        "fuse3"  : {},
-        "fuse4"  : {},
-
-        "fuse_ex": {},
-
+        "upties": [
+            {"polarization": 1},
+        ],
+        "tiered_fusions": [],
+        "strict_fusions": [],
         "buy"    : ["polarization"], # order is important
         "all"    : ["polarization"],
         "sin"    : True

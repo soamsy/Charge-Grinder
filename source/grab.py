@@ -77,6 +77,8 @@ def get_gift(image, owned_x):
             if (coord := LocateRGB.locate(PTH[str(gift)], image=image, region=REG["EGO"], conf=0.84, comp=0.94)) \
             and far_from_owned(gui.center(coord), owned_x):
                 point = gui.center(coord)
+                win_moveTo(point)
+                time.sleep(0.1)
                 win_click(point, tsize=(150, 160))
                 return rectangle(image, (int(point[0]-100), 0), (int(point[0]+100), 110), (0, 0, 0), -1)
 
@@ -85,6 +87,8 @@ def get_gift(image, owned_x):
     for lvl in range(4, 0, -1):
         if ego_aff and lvl == ego_aff[0]:
             point = ego_aff[1]
+            win_moveTo(point)
+            time.sleep(0.1)
             win_click(point, tsize=(150, 230))
             return rectangle(image, (int(point[0]-100), 0), (int(point[0]+100), 110), (0, 0, 0), -1)
         elif boxes := LocateRGB.locate_all(PTH[f"tier{lvl}"], image=image, region=REG["EGO"], method=cv2.TM_SQDIFF_NORMED, threshold=30, conf=0.85):
@@ -92,6 +96,8 @@ def get_gift(image, owned_x):
                 point = gui.center(box)
                 if far_from_owned(point, owned_x):
                     break
+            win_moveTo(point)
+            time.sleep(0.1)
             win_click(point, tsize=(150, 130))
             return rectangle(image, (int(point[0]-100), 0), (int(point[0]+100), 110), (0, 0, 0), -1)
     return image

@@ -1,8 +1,11 @@
+from collections import defaultdict
+
 from source.utils.utils import *
 from source.shop.browse_shop import *
 from itertools import combinations_with_replacement
 from source_app.params import CACHE
 from source.teams import TEAMS
+from itertools import groupby
 
 TWO_ITEM_COMBOS = list(combinations_with_replacement(range(1, 5), 2))
 
@@ -29,99 +32,42 @@ EXTRA = []
 for i in range(3, 6):
     EXTRA += list(combinations_with_replacement(range(1, 5), i))
 
-def init_fuse():
-    if not now.button(p.SUPER): return
-    chain_actions(shop_click, [
-        Action(p.SUPER, click=(405, 580), ver="fuse"),
-        lambda: win_moveTo(469, 602, duration=0.1),
-        ClickAction((469, 602), ver="keywordSel")
-    ])
-    win_moveTo(605, 612)
-    for i, team in enumerate(p.GIFTS):
-        if has_fusions_for(team):
-            continue
-        p.IDX = i
-        break
-    confirm_affinity()
-
 def fuse():
-    init_fuse()
-
-    if handle_available_fusion():
-        hook_x = find_hook_x()
-        while not_at_bottom():
-            print("scroll down for inventory scan alignment")
-            browse_fast(hook_x)
-            time.sleep(0.3)
-
-    order = [
-        fuse_one_uptie2,
-        fuse_one_extra,
-        fuse_one_by_type,
-    ]
-
-    first_missing = None
-    for i, _ in enumerate(p.GIFTS):
-        for action in order:
-            missing = action(i)
-            if missing and not first_missing:
-                first_missing = missing
-
-    return first_missing or fuse_lunar()
-
-def get_fuse_list():
-    gift_list = p.GIFTS[0]["goal"]
-
-    for i in range(2, 5, 2):
-        if not p.GIFTS[0].get(f"fuse{i}", False):
+    for i, team in enumerate(p.GIFTS):
+        if fusions_complete_for(team):
             continue
-        gift_list += [name for name, tier in p.GIFTS[0][f"fuse{i}"].items() if tier is None]
-    return gift_list    
+        fuse_any_strict_fusions(i)
+        missing_tiers = fuse_one_tiered_fusion(i)
+        if missing_tiers:
+            return missing_tiers
+
+    return fuse_lunar()
+
+def get_strict_fusion_list():
+    gift_list = []
+    for team in p.GIFTS:
+        for fusion in team["strict_fusions"]:
+            for name, _ in fusion.items():
+                gift_list.append(name)
+    return gift_list
 
 def handle_available_fusion():
-    print("checking available fusion...")
-    hook_x = find_hook_x()
-    while not_at_top():
-        print("scroll up for alignment")
-        browse_fast(hook_x, up=True)
-        time.sleep(0.3)
-
+    go_to_top_fast()
     if not now_rgb.button("fusion_available"):
-        return now_rgb.button("scroll", "scroll_full")
+        return False
     
-    gift_list = get_fuse_list()
-    print(f"gifts to fuse: {gift_list}")
-    if not gift_list: return now_rgb.button("scroll", "scroll_full")
-    
-    if click_gifts_for_fusion(gift_list, REG["fuse_shelf_top"], chain=fuse_selected, is_fuse=True):
-        return now_rgb.button("scroll", "scroll_full")
-    
-    if now_rgb.button("scroll", "scroll_full"):
-        h = 1
-        adj = 0
-        hook_x = find_hook_x()
-        while not_at_bottom():
-            print("scroll down for available fusions tab")
-            browse(hook_x, adj=adj)
-            if click_gifts_for_fusion(gift_list, REG["fuse_shelf_top"], chain=fuse_selected, is_fuse=True):
-                return now_rgb.button("scroll", "scroll_full")
-            ck = LocateRGB.locate(PTH["height_ck"], region=REG["fuse_shelf_top"])
-            adj = 625 - gui.center(ck)[1] if ck else 0
-            h += 1
+    gift_list = get_strict_fusion_list()
+    if not gift_list:
+        return False
+
+    if click_gifts_for_available_fusion(gift_list, REG["fuse_shelf_top"]):
+        return True
+
     return False
 
-def fuse_one_extra(i):
-    init_fuse()
-    team = p.GIFTS[i]
-    for name, tier in team["fuse_ex"].items():
-        while not name in get_inventory()["have"].keys():
-            set_affinity(i)
-            missing = actual_fuse(tier, get_inventory()["coords"])
-            return missing
-    return None
-
-def fuse_lunar(_ignored_index):
-    init_fuse()
+def fuse_lunar():
+    if 1 == 1:
+        return None # TODO: refactor
     if p.EXTREME and "lunarmemory" in get_inventory()["have"].keys():
         return None
     for _ in range(5):
@@ -130,16 +76,16 @@ def fuse_lunar(_ignored_index):
             return missing
     return None
 
+# TODO: refactor to reflect new team configs!!!
 def fuse_one_lunar():
     inventory = get_inventory()
-    coords = inventory["coords"]
     have = inventory["have"]
     teams = list(TEAMS.values())
     to_click = []
     for i in range(7, 10):
         if not list(teams[i]["uptie2"].keys())[0] in have.keys():
             set_affinity(i, teams=teams)
-            missing = actual_fuse(4, coords)
+            missing = execute_tier_fuse(4)
             return missing
         to_click.append(have[list(teams[i]["uptie2"].keys())[0]])
     stones_have = list(set([f"stone{i}" for i in range(7)]) & set(have.keys()))
@@ -147,7 +93,7 @@ def fuse_one_lunar():
         for i in range(7):
             if not f"stone{i}" in have.keys():
                 set_affinity(i, teams=teams)
-                missing = actual_fuse(4, coords)
+                missing = execute_tier_fuse(4)
                 return missing
     for i in range(2):
         to_click.append(have[stones_have[i]])
@@ -155,118 +101,95 @@ def fuse_one_lunar():
         perform_clicks(to_click)
     return None
 
-def fuse_one_by_type():
-    init_fuse()
-    to_click = []
-    inventory = get_inventory()
-    have = inventory["have"]
-    coords = inventory["coords"]
-    sub_goal = sub_goal_search(have)
-    if not sub_goal:
-        return None
-    i, _, fuse_type = sub_goal[0]
-    for name, tier in p.GIFTS[p.IDX][f"fuse{fuse_type+1}"].items():
-        if not name in have.keys():
-            if tier != None:
-                return actual_fuse(tier, coords)
-            else: # need to fuse
-                for name, tier in p.GIFTS[p.IDX][f"fuse{fuse_type}"].items():
-                    if not name in have.keys():
-                        return actual_fuse(tier, coords)
-                    to_click.append(have[name])
-                set_affinity(i)
-                perform_clicks(to_click)
-                return None
-        to_click.append(have[name])
-    set_affinity(i)
-    perform_clicks(to_click)
-    return None
-
-def fuse_one_uptie2(i):
-    init_fuse()
-    inventory = get_inventory()
-    coords = inventory["coords"] if p.EXTREME else inventory["coords_agg"]
+def fuse_one_tiered_fusion(i):
+    named_locs = get_named_locs()
     team = p.GIFTS[i]
-    for item in team["uptie2"].keys():
-        if item in inventory["have"]:
-            continue
-        set_affinity(i)
-        return actual_fuse(4, coords)
+    print("fuse_one_tiered_fusion", i, named_locs)
+    for fusion in team["tiered_fusions"]:
+        for item, tier in fusion.items():
+            if item in named_locs:
+                continue
+            print("want to fuse ", fusion, " and I own ", named_locs)
+            combo, missing = decide_fusion(tier)
+            if missing:
+                lower_tiers = [t for t in missing.keys() if t < tier]
+                lower_tiers.sort()
+                if lower_tiers:
+                    nested_combo, nested_missing = decide_fusion(lower_tiers[0])
+                    if not nested_missing:
+                        return execute_tier_fuse(lower_tiers[0], i)
+            return execute_tier_fuse(tier, i)
     return None
 
-def has_fusions_for(config):
-    needed = []
-    needed.extend(config["uptie2"].keys())
-    needed.extend(config["goal"])
-    needed.extend(config.get("fuse1", {}).keys())
-    needed.extend(config.get("fuse2", {}).keys())
-    needed.extend(config.get("fuse3", {}).keys())
-    needed.extend(config.get("fuse4", {}).keys())
-    needed.extend(config.get("fuse_ex", {}).keys())
-    return all([item in p.INVENTORY["have"] for item in needed])
+def simulate_all_tiered_fusions():
+    named_locs = get_named_locs()
+    tiers_for_combos = []
+    tiers_missing = []
+    for i, team in enumerate(p.GIFTS):
+        for fusion in team["tiered_fusions"]:
+            for item, tier in fusion.items():
+                if item in named_locs:
+                    continue
+                combo, missing = decide_fusion(tier)
+                print("simulate:", "combo", combo, "missing", missing)
+                tiers_for_combos.extend(combo or [])
+                tiers_missing.extend(missing or [])
+                if missing:
+                    lower_tiers = [t for t in missing.keys() if t < tier]
+                    print("lower_tiers", lower_tiers)
+                    if lower_tiers:
+                        nested_combo, nested_missing = decide_fusion(lower_tiers[0])
+                        print("nested", nested_combo, nested_missing)
+                        tiers_for_combos.extend(nested_combo or [])
+                        tiers_missing.extend(nested_missing or [])
+    return tiers_for_combos, tiers_missing
 
-def has_all_fusions():
-    for config in p.GIFTS:
-        if not has_fusions_for(config):
-            return False
-
-    if p.EXTREME and "lunarmemory" not in p.INVENTORY["have"]:
-        return False
-    return True
-
-def sub_goal_search(have):
-    sub_goal = []
-    if not p.GIFTS[0]["goal"]:
-        return []
-    if p.GIFTS[0]["sin"] and p.GIFTS[0]["goal"] and not p.GIFTS[0]["goal"][0] in have.keys():
-        sub_goal.append((0, search_have(have, 1, 0), 1))
-    if p.is_on_hard() and p.GIFTS[0]["sin"] and p.GIFTS[0]["goal"] and len(p.GIFTS[0]["goal"]) > 1 and not p.GIFTS[0]["goal"][1] in have.keys():
-        sub_goal.append((0, search_have(have, 3, 0), 3))
-    sub_goal.sort(key=lambda item: (item[1], item[0]))
-    return sub_goal
-
-def search_have(have, fuse_type, idx):
-    missing = 0
-    iterations = 0
-    names = []
-    if name := next((key for key, value in p.GIFTS[idx][f"fuse{fuse_type + 1}"].items() if value is None), None):
-        if name in have:
-            iterations += 2
-        else:
-            names += list(p.GIFTS[idx][f"fuse{fuse_type}"].keys())
-
-    names += [key for key, value in p.GIFTS[idx][f"fuse{fuse_type + 1}"].items() if value is not None]
-    for name in names:
-        if name not in have.keys():
-                missing += 1
-        iterations += 1
-    return missing/iterations
+def fuse_any_strict_fusions(i):
+    named_locs = get_named_locs()
+    team = p.GIFTS[i]
+    for fusion in team["strict_fusions"]:
+        for name, ingredients in fusion.items():
+            missing = {}
+            for ingredient, tier in ingredients:
+                if ingredient not in named_locs:
+                    missing[ingredient] = tier
+            if missing:
+                print(f"Missing items for fusing. {name} still needs {missing}")
+                return missing
+            set_affinity(i)
+            if handle_available_fusion():
+                return None
+            locs = [named_locs[name] for name in ingredients.keys()]
+            click_locs(locs)
+            
+    return None
 
 def set_affinity(i, teams=None):
-    if teams is None: teams = p.GIFTS
-    if p.IDX == i: return
+    if init_fuse(i):
+        return
+    if teams is None:
+        teams = p.GIFTS
+    if p.IDX == i:
+        return
     p.IDX = i
     ClickAction((469, 602), ver="keywordSel").execute(shop_click)
     win_moveTo(605, 612)
     confirm_affinity(teams=teams)
     time.sleep(0.2)
 
-def click_gifts_for_fusion(gifts, reg, chain=None):
-    if LocateGray.check(PTH["gifts_owned"], region=REG["gifts_owned"], wait=False):
-        return True
-    
-    gift_searcher = find_gifts_for_fusion(gifts, reg)
-    for (x, y, gift) in gift_searcher:
+def click_gifts_for_available_fusion(gifts, reg):
+    fused_some = False
+    for (x, y, gift) in find_gifts_for_fusion(gifts, reg):
         ignore = LocateRGB.locate_all(PTH["cannot_fuse"], region=reg, threshold=80)
         if any(abs(gui.center(res)[0] - x) < 50 for res in ignore):
             continue
-
         win_click((x, y))
+        fuse_selected()
+        fused_some = True
         time.sleep(0.1)
         if LocateGray.check(PTH["gifts_owned"], region=REG["gifts_owned"], wait=False):
-            print("all fused!")
-            return True
-    return False
+            break
+    return fused_some
 
 def find_gifts_for_fusion(gifts, reg):
     for gift in gifts:
@@ -280,21 +203,50 @@ def find_gifts_for_fusion(gifts, reg):
         except gui.ImageNotFoundException:
             continue
 
-def actual_fuse(tier, coords, depth=0):
-    to_click = []
-    combo, missing = decide_fusion(tier, coords, depth)
-    print("fusing", combo, "and missing", missing)
-    if not missing:
-        for tier in combo:
-            to_click.append(coords[tier][-1])
-            coords[tier].pop(-1)
-        perform_clicks(to_click)
-        p.NEED_INVENTORY_CHECK = True
-        get_inventory()
-        return None
-    else: return missing
+def find_locs_for_fusion(combo, coords):
+    coords.sort(key=lambda coord: (coord[1]["keep"], coord[0]))
+    print("wtf coords", coords)
+    groups = defaultdict(list)
+    for loc, item in coords:
+        if "tier" in item:
+            groups[item["tier"]].append((loc, item))
+    locs = []
+    print("combo for fusion", combo)
+    print("groups", groups)
+    for tier in combo:
+        if tier in groups and groups[tier]:
+            loc, item = groups[tier].pop()
+            print("fusion: loc", loc, "item", item)
+            locs.append(loc)
+    if len(locs) < len(combo):
+        print("Error: don't have enough items for combo fusion")
+        return []
+    return locs
 
-def fuse_selected(gift=None):
+def execute_tier_fuse(tier, affinity):
+    to_click = []
+    combo, missing = decide_fusion(tier)
+    if missing:
+        return missing
+    
+    if not combo:
+        return None
+
+    have = get_inventory()["have"]
+    coords = [(loc, item) for loc, item in have.items() if item["fuse"]]
+    locs = find_locs_for_fusion(combo, coords)
+    for loc in locs:
+        to_click.append(loc)
+
+    if not locs:
+        return
+    set_affinity(affinity)
+    click_locs(locs)
+    p.NEED_INVENTORY_CHECK = True
+    get_inventory()
+    return None
+
+def fuse_selected():
     wait_while_condition(lambda: not now.button("Confirm.2"), lambda: win_click(1197, 876) if now.button("fuse") else None, timer=1.5)
     wait_while_condition(lambda: not now.button("Confirm"), lambda: gui.press("space") if now.button("Confirm.2") else None, timer=1.5)
     connection()
@@ -306,6 +258,9 @@ def fuse_selected(gift=None):
     p.NEED_INVENTORY_CHECK = True
 
 def perform_clicks(to_click):
+    pass
+
+def click_locs(locs):
     if p.WISHMAKING and not now_rgb.button("wishmaking"):
         time.sleep(0.1)
         wait_while_condition(lambda: not now.button("Confirm.0"), lambda: win_click(410, 755), interval=0.1, timer=0.2)
@@ -313,38 +268,29 @@ def perform_clicks(to_click):
         win_moveTo(1194, 841)
         time.sleep(0.2)
 
-    hook_x = find_hook_x()
-    while not_at_bottom():
-        print("scroll down for inventory click alignment")
-        browse_fast(hook_x)
-        time.sleep(0.5)
+    def scan(starting_row, reg, row_height):
+        usable_rows = get_usable_rows(reg, row_height)
+        max_j = starting_row + usable_rows
+        for i, j in locs:
+            if starting_row <= j < max_j:
+                x, y = to_coords(i, j, reg, row_height)
+                win_click(x, y)
+                win_moveTo(x, y)
+                time.sleep(0.2)
+        return get_usable_rows(reg, row_height)
+    # ClickAction((x, y) , ver="forecast!").execute(click_rgb)
 
-    to_click = sorted(to_click, key=lambda x: x[2])
-    h = 0
-    adj = 0
-    for pos in to_click:
-        if pos[2] - h > 0:
-            print("iterating items for fuse")
-            for _ in range(pos[2] - h):
-                browse(hook_x, step=-135, adj=adj)
-                ck = LocateRGB.locate(PTH["height_ck"], region=REG["fuse_shelf_low"])
-                adj = 625 - gui.center(ck)[1] if ck else 0
-            h = pos[2]
-            time.sleep(0.2)
-        ClickAction(pos[:2], ver="forecast!").execute(click_rgb)
-        print("pos", pos)
-    
-    fuse_selected()
-    to_click.clear()
+    scan_entire_inventory_while_parsing(scan, location="fuse")
+    fuse_selected()    
 
-    hook_x = find_hook_x()
-    while not_at_top():
-        print("scroll up for alignment")
-        browse_fast(hook_x, up=True)
-        time.sleep(0.3)
-
-def decide_fusion(target_tier, inventory, depth=0):
-    if target_tier not in fusion_ranges: raise ValueError("Invalid target fusion tier")
+def decide_fusion(target_tier, exclude_tiers={}):
+    have = get_inventory()["have"]
+    all_available = [(loc, gift) for loc, gift in have.items() if gift["fuse"]]
+    by_tier = {key: list(group) for key, group in groupby(all_available, lambda pair: pair[1].get("tier", -1))}
+    for tier, count in exclude_tiers.items():
+        if tier in by_tier:
+            new_len = max(0, len(by_tier[tier]) - count)
+            by_tier[tier] = by_tier[tier][0:new_len]
 
     if p.SUPER == "shop":
         combos = COMBOS
@@ -361,8 +307,9 @@ def decide_fusion(target_tier, inventory, depth=0):
         (combo, sum(item_points[t] for t in combo))
         for combo in combos
         if low <= sum(item_points[t] for t in combo) <= high
-        and (depth == 0 or all([t < target_tier for t in combo]))
+        and all([t < target_tier for t in combo])
     ]
+    print("valid_combos", valid_combos)
     
     best_choice = None
     best_missing = None
@@ -374,18 +321,18 @@ def decide_fusion(target_tier, inventory, depth=0):
         missing = {}
         missing_cost = 0
         for tier, count_needed in needed.items():
-            have = len(inventory[tier])
-            if have < count_needed:
-                deficit = count_needed - have
+            num_owned = len(by_tier[tier]) if tier in by_tier else 0
+            if num_owned < count_needed:
+                deficit = count_needed - num_owned
                 missing[tier] = deficit
                 missing_cost += deficit * item_points[tier]
         
         if missing.get(4, 0) > 0: # we are not buying tier 4 for fusion, no way
             continue
         
-        if p.SUPER == "shop" and not depth and missing.get(3, 0) == 1 and \
+        if p.SUPER == "shop" and missing.get(3, 0) == 1 and \
            sum([missing.get(i, 0) for i in range(1, 2)]) == 0:
-            new_have = {tier: len(items) for tier, items in inventory.items()}
+            owned_counts = {tier: len(gifts) for gifts in by_tier.items()}
             skip_missing = True
             for i in range(1, 5): # update inventory
                 if i in needed.keys():
@@ -393,20 +340,19 @@ def decide_fusion(target_tier, inventory, depth=0):
                         if i == 3 and skip_missing:
                             skip_missing = False
                             continue
-                        if new_have[i] > 0:
-                            new_have[i] -= 1
+                        if i in owned_counts and owned_counts[i] > 0:
+                            owned_counts[i] -= 1
             new_combo = None
             best_price = None
             for tier3_combo, price in get_tier3: # I don't want to do a recursion
                 need = combo_counter(tier3_combo)
                 for tier, count_needed in need.items():
-                    if new_have[tier] < count_needed:
+                    if tier not in owned_counts or owned_counts[tier] < count_needed:
                         break
                 else:
                     if best_price is None or price < best_price:
                         new_combo = tier3_combo
                         best_price = price
-            # new_combo, new_missing = decide_fusion(3, new_inventory, 1)
             if new_combo:
                 combo = new_combo
                 missing = {}
@@ -424,6 +370,15 @@ def decide_fusion(target_tier, inventory, depth=0):
             best_total_cost = total
 
     return best_choice, best_missing
+
+def expected_combo_for(tier):
+    expected = {
+        1: (1, 1),
+        2: (1, 2),
+        3: (2, 2, 1),
+        4: (3, 2, 2),
+    }
+    return expected.get(tier, ())
 
 def combo_counter(combo):
     counter = {}

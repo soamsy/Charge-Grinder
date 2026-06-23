@@ -19,7 +19,9 @@ def remove_pack(level, name):
             p.PICK_HARD[f"floor{l}"].remove(name)
 
 def pack_sifter():
-    return SIFTMatcher(region=(161, 630, 1632, 140), nfeatures=1500, contrastThreshold=0.00, edgeThreshold=12)
+    region = (161, 630, 1632, 120)
+    cv2.imwrite(f"testing/pack_{time.time()}_sifter.png", screenshot(region))
+    return SIFTMatcher(region=region, nfeatures=1500, contrastThreshold=0.00, edgeThreshold=12)
 
 def pack_eval(regions, skip, skips):
     # best packs
@@ -40,6 +42,8 @@ def pack_eval(regions, skip, skips):
     second = [p for p in pack_list if p in backup]
     third = [p for p in pack_list if p not in priority and p not in backup]
 
+    print("pack priority", first, second, third)
+
     # for i, region in enumerate(regions):
     #     cv2.imwrite(f"testing/region_{time.time()}_{i}.png", screenshot(region))
 
@@ -59,6 +63,7 @@ def pack_eval(regions, skip, skips):
     
     first_pack, region_id = locate_packs(first, 2)
     if first_pack:
+        print("first_pack", first_pack, "region_id", region_id)
         remove_pack(p.LVL, first_pack)
         logging.info(f"Pack: {first_pack}")
         print(f"Pack: {first_pack}")
@@ -95,8 +100,6 @@ def pack_eval(regions, skip, skips):
         return None
     elif not filtered:
         print("Pick bad pack")
-        if p.did_normal_then_hard():
-            return 'CANCEL_NORMAL4HARD1' # Try switching back to normal for last floor
         if packs:
             name = random.choice(list(packs.keys()))
             remove_pack(p.LVL, name)
@@ -192,25 +195,13 @@ def pack():
         card_count = 5 - min((max((gui.center(box)[0] - 21), 1) // 157), 2)
     
     offset = (5 - card_count)*161
-    regions = [(170 + offset + 321 * i, 280, 270, 624) for i in range(card_count)]
+    regions = [(120 + offset + 321 * i, 280, 320, 624) for i in range(card_count)]
     skips = 1 + p.BUFF[2] + int(p.BUFF[2] > 0)
-
-    print(f"{card_count} Packs")
 
     for skip in range(skips + 1):
         id = pack_eval(regions, skip, skips)
         # cv2.imwrite(f"choices/pack{int(time.time())}.png", screenshot()) # debugging
         if not id is None:
-            if id == 'CANCEL_NORMAL4HARD1':
-                print('Cancel normal4->hard1')
-                p.cancel_normal_then_hard()
-                if now.button("hardDifficulty"):
-                    win_click(1349, 64, delay=0.5)
-                time.sleep(1.3)
-                id = pack_eval(regions, skip, skips)
-                if id is None:
-                    continue
-
             region = regions[id]
             x, y = (region[0] + (region[2] // 2), region[1] + (region[3] // 2))
             x += random.randint(-40, 40)

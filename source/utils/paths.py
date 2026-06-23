@@ -138,6 +138,7 @@ REG = {
     "alldead"        : ( 261, 1019, 1391,   41),
     "suicide"        : ( 756,  233,  437,  121),
     "forfeit"        : ( 740,  547,  151,  208),
+    "ContinueWhite"  : ( 900,  547,  141,  195),
     "directions"     : ( 508,  130,  200,  800),
     "directions_init": ( 813,  130,  200,  800),
     "secretEncounter": (1595,  767,  183,  100),
@@ -175,7 +176,7 @@ REG = {
     "replace"        : ( 280,  165,  530,   80),
     "purchased"      : ( 860,  317,  150,   50),
     "purchased_sup!" : (1090,  317,  385,   50),
-    "purchased_s3"   : ( 860,  317,  615,   50),
+    "purchased_s3"   : ( 860,  317,  715,   50),
     "no_hp"          : (  70,  985, 1400,   50),
     "return"         : (1569,  920,  260,  100),
     "select"         : (1569,  920,  260,  100),
@@ -184,6 +185,11 @@ REG = {
     "affinity!"      : ( 368,  327, 1160,  442),
     "revenue!"       : (1405,  126,  241,   56),
     "forecast!"      : ( 280,  257,  540,  334),
+    "NotEnoughCost"  : (1420,  160,  180,  35),
+    "NotEnoughKeywordCost"  : (1620,  160,  180,  35),
+    "CannotRefresh"  : (1420,  160,  180,  35),
+    "shopcorner"     : ( 758,  274,   90, 110),
+    "CannotKeywordRefresh"  : (1620,  160,  180,  35),
 
     # utils.py
     "connecting"     : (1548,   66,  293,   74),

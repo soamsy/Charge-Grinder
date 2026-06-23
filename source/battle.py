@@ -132,7 +132,7 @@ def is_ego():
             return background
     return None
 
-def get_centroids_by_hue(image, hue, hue_threshold=4, lower_sat=152, upper_sat=255, lower_val=55, upper_val=255, area_min=24):
+def get_centroids_by_hue(image, hue, hue_threshold=3, lower_sat=170, upper_sat=255, lower_val=69, upper_val=255, area_min=26):
     comp = p.WINDOW[2] / 1920
     area_min *= comp
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -192,7 +192,7 @@ def count_sinners(gear_start, gear_end):
     count = sum(is_bin_filled)
     return count
 
-def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=120, sin="envy"):
+def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=160, sin="envy"):
     # cv2.imwrite('debug_skill3_found.png', background)
     median_rgb = np.median(background, axis=(0, 1)).astype(int)
     blended_rgb = (median_rgb * 0.45 + np.array(known_rgb) * 0.55).astype(int)
@@ -221,7 +221,7 @@ def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=1
             region_mask = mask[y1:y2, x1:x2]
             similar_pixels = np.count_nonzero(region_mask)
 
-            if 150*comp >= similar_pixels >= 20*comp:
+            if 150*comp >= similar_pixels >= 15*comp:
                 cluster_centers.append(center)
     # print(sin)
     # print(centroids)
@@ -381,8 +381,8 @@ def chain(gear_start, gear_end, check_lowskill=False):
     ryoshu_x = -1
     if p.is_saikai():
         if is_solo(gear_start, gear_end):
-            wrath_top = sin_search(-2, 795, 40, "debug_top_row.png")
-            wrath_bottom = sin_search(-2, 885, 5, "debug_bottom_row.png")
+            wrath_top = sin_search(-3, 795, 40, "debug_top_row.png")
+            wrath_bottom = sin_search(-3, 885, 5, "debug_bottom_row.png")
             pride_top = sin_search(109, 795, 15)
             pride_bottom = sin_search(109, 885, 5)
             wraths = set()
@@ -443,8 +443,10 @@ def chain(gear_start, gear_end, check_lowskill=False):
         perspective_offset = -(target_x - 960) / 30
         skill_targets.append((int(target_x + perspective_offset), next_y, 4))
         curr_x += bin_length
-    final_x = gear_end[0] + 45
-    final_y = skill_middle_y
+    final_x = gear_end[0] + 44
+    final_y = skill_middle_y + 4
+    if skill_targets[-1][1] > skill_middle_y:
+        final_y = skill_middle_y - 4
 
     win_moveTo(gear_start)
     gui.mouseDown()
@@ -556,9 +558,9 @@ def fight(lux=False):
         if p.EXPECT_CHAIN:
             if gear_start:
                 gx, gy = gear_start
-                win_moveTo(gx-120, gy+120)
+                win_moveTo(gx-150, gy+120)
             else:
-                win_moveTo(400, 960)
+                win_moveTo(300, 960)
             p.EXPECT_CHAIN = False
 
         if now_rgb.button("event"):

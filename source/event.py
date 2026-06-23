@@ -69,7 +69,7 @@ def event():
         now_click.button("CommenceBattle")
 
         if now.button("check"):
-            time.sleep(0.2)
+            time.sleep(0.4)
             for prob in PROBS:
                 if now_click.button(prob, "probs", search_from_right=True):
                     if now.button("skip"):

@@ -283,6 +283,8 @@ class Locate(): # if inputing np.ndarray, convert to BGR first!
         x_off, y_off, _, _ = region
         template, image = cls._convert(template, image)
         result = cv2.matchTemplate(image, template, method)
+        # cv2.imwrite(f"testing/template_{time.time()}.png", template)
+        # cv2.imwrite(f"testing/screenstuff_{time.time()}.png", image)
         match_w, match_h = template.shape[1], template.shape[0]
         matches = cls._compare(result, conf, method)
         if 'search_from_right' in kwargs and kwargs['search_from_right']:
@@ -735,9 +737,15 @@ def handle_fuckup():
         gui.set_window()
         win_click(1888, 901)
         gui.press("esc")
+        time.sleep(0.5)
         gui.press("esc")
-        if loc.button("forfeit", wait=1):
+        time.sleep(0.5)
+        if now.button("forfeit"):
             gui.press("esc")
+            time.sleep(0.5)
+        if now.button("ContinueWhite"):
+            gui.press("esc")
+            time.sleep(0.5)
 
 
 def input_with_fallback(key, mouse_action, ver_func):

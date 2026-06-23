@@ -1578,9 +1578,12 @@ class ScrollableMyApp(QMainWindow):
             return self.base_height
 
 
+def handle_ctrl_c(a, b):
+    QApplication.quit()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    signal.signal(signal.SIGINT, handle_ctrl_c)
     window = ScrollableMyApp()
     window.show()
     sys.exit(app.exec())

@@ -82,6 +82,8 @@ def dungeon_start():
         lambda: time.sleep(1.4),
         lambda: win_click(1588, 567) if p.EXTREME and now_rgb.button("infinite_off") else None,
         Action("Start"),
+        lambda: win_moveTo(1150, 730),
+        lambda: time.sleep(0.1),
         Action("enterInvert", ver="ConfirmTeam", click=(1150, 730)),
         select_team,
         lambda: try_click.button("ConfirmTeam"),
@@ -320,6 +322,8 @@ def main_loop():
                 while p.EXPECT_ACTION:
                     sidequest = p.EXPECT_ACTION
                     p.EXPECT_ACTION = None
+                    print("got sidequest!", sidequest)
+                    time.sleep(0.3)
                     ck += actions[sidequest]()
         except RuntimeError:
             handle_fuckup()
@@ -380,8 +384,6 @@ def set_team(team, teams, keywordless):
     p.GIFTS = [team_list[keyword] for keyword in p.TEAM]
     p.MODS = teams[team]["mods"] if teams[team] else {}
     handle_mods(teams, team, keywordless)
-
-    if not p.BUFF[3]: p.GIFTS[0]['uptie1'] = {k: p.GIFTS[0]['uptie1'][k] for k in list(p.GIFTS[0]['uptie1'])[:1]}
 
     p.SELECTED = [list(SINNERS.keys())[i] for i in list(teams[team]["sinners"])]
     p.PICK_NORMAL = generate_packs_pr(teams[team]["priority_normal"])

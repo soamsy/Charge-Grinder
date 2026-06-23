@@ -2,7 +2,7 @@ from source.utils.utils import *
 
 # Weights are the average battle time in seconds
 priority = {"Event": 0, "Normal": 52, "Miniboss": 67, "Risky": 87, "Focused": 77}
-saikai_priority = {"Event": 0, "Normal": 52, "Miniboss": 47, "Risky": 63, "Focused": 63}
+saikai_priority = {"Event": 0, "Normal": 52, "Miniboss": 47, "Risky": 66, "Focused": 63}
 v_list = [0.8, 0.9, 1]
 d_list = [None, -0.1, -0.19]
 keys_map = {0: "w", 1: "d", 2: "s"}
@@ -71,9 +71,10 @@ def get_node_name(_loc, region):
 
 def position(shift=0):
     x, y = random.randint(1500, 1700), random.randint(300, 500)
-    time.sleep(0.1)
     win_moveTo(x, y, tsize=(1, 1))
-    win_dragTo(x - 295, y + 100 + shift*320, duration=1.5, hook=True, tsize=(1, 1))
+    time.sleep(0.3)
+    win_dragTo(x - 295, y + 100 + shift*320, duration=1.4, hook=True, tsize=(1, 1))
+    time.sleep(0.2)
 
 def directions(is_aligned=True):
     options = {
@@ -210,13 +211,17 @@ def move():
         p.MOVE_ANIMATION = False
         is_move = loc.button("Move", wait=2)
     
-    if not is_move or \
-           now.button("Confirm"): return False
+    if not is_move:
+           return False
     
+    if now.button("Confirm"):
+        gui.press("space")
+        return False
+
     if p.is_on_hard():
         time.sleep(1.4) # node reveal animation
     else:
-        time.sleep(0.15)
+        time.sleep(0.25)
 
     if p.is_on_hard() and now.button("suicide"):
         return False
@@ -236,13 +241,6 @@ def move():
         return False
     # fail detection end
     # if now.button("victory") or not now.button("Move"): return False
-    
-    if p.MOVE_FAST_NEXT_TIME:
-        p.MOVE_FAST_NEXT_TIME = False
-        print("Moving quickly...")
-        for key in ["d", "space"]:
-            gui.press(key)
-        return enter(wait=0.5)
 
     if not now_rgb.button("Danteh"):
         print("Case 0: Bus is out of view")
@@ -282,6 +280,8 @@ def move():
             logging.info(f"Entering {name} {'fight'*(name!='Event' and name!='Shop')}")
             use_node_name(name)
             return True
+        print("whoa one path and no nodes")
+        time.sleep(0.3)
         return False
     elif all(k in regions for k in (0, 2)):
         print("Case 4: No major adjustment needed for node search")
@@ -335,9 +335,6 @@ def move():
         # print(nodes)
         id, name, can_go_fast = next_step(nodes, inter_connect)
         if not id is None:
-            p.MOVE_FAST_NEXT_TIME = can_go_fast
-            if can_go_fast:
-                print("go fast next time!!!")
             key_name = keys_map.get(int(id-adjust), "d")
             region = regions[id]
             if input_with_fallback(key_name, lambda: win_click(gui.center(region)), enter):
@@ -358,8 +355,11 @@ def use_node_name(name):
         p.EXPECT_CHAIN = True
     elif name == 'Focused':
         p.EXPECT_FOCUSED = True
-    elif name in ['Risky', 'Miniboss', 'Boss', 'Shop']:
+    elif name in ['Risky', 'Miniboss', 'Boss']:
         p.EXPECT_REWARD = True
+    elif name in ['Shop']:
+        p.EXPECT_REWARD = True
+        p.EXPECT_ACTION = "shop"
 
 def move_fallback():
     for key in ["d", "space"]:
