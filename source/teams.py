@@ -210,7 +210,7 @@ TEAMS = {
 HARD = {
     "BURN": {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"hellterfly": 2},
@@ -233,7 +233,7 @@ HARD = {
     },
     "BLEED": {
         "checks" : ["Bleed", "smallBleed", (535, 370), "reBleed", "bigBleed", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"clerid": 2},
@@ -258,7 +258,7 @@ HARD = {
 
     "TREMOR": {
         "checks" : ["Tremor", "smallTremor", (755, 370), "reTremor", "bigTremor", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"bracelet": 2},
@@ -283,7 +283,7 @@ HARD = {
 
     "RUPTURE": {
         "checks" : ["Rupture", "smallRupture", (975, 370), "reRupture", "bigRupture", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"lamp": 2},
@@ -309,7 +309,7 @@ HARD = {
     # Sinking
     "SINKING": {
         "checks" : ["Sinking", "smallSinking", (315, 665), "reSinking", "bigSinking", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"redorder": 2},
@@ -332,7 +332,7 @@ HARD = {
     # Poise
     "POISE": {
         "checks" : ["Poise", "smallPoise", (535, 665), "rePoise", "bigPoise", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"stonetomb": 2},
@@ -358,7 +358,7 @@ HARD = {
     # Charge
     "CHARGE": {
         "checks" : ["Charge", "smallCharge", (755, 665), "reCharge", "bigCharge", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"employeecard": 2},
@@ -383,7 +383,7 @@ HARD = {
 
     "SLASH": {
         "checks" : ["Slash", "smallSlash", (975, 665), "reSlash", "bigSlash", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"shortcane": 2},
@@ -400,7 +400,7 @@ HARD = {
 
     "PIERCE": {
         "checks" : ["Pierce", "smallPierce", (315, 840), "rePierce", "bigPierce", 1],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"plumeproof": 2},
@@ -417,7 +417,7 @@ HARD = {
 
     "BLUNT": {
         "checks" : ["Blunt", "smallBlunt", (535, 840), "reBlunt", "bigBlunt", 0],
-        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "AbnormalSeismicZone"],
+        "floors" : ["FlatbrokeGamblers", "HatredandDespair", "HellsChicken", "Line3", "Line2", "The_BE", "Line1", "Line3Terminus", "MiracleinDistrict20", "Line5", "MiracleinDistrict20BokGak", "Line1Madness"],
         "priority_floors" : {"FlatbrokeGamblers": 1, "HellsChicken": 2},
         "upties": [
             {"bluntmemory": 4},
@@ -444,17 +444,15 @@ CUSTOM_TEAMS = {
         ],
         "strict_fusions": [],
         "buy"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "emerald"],
-        "all"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "emerald"],
+        "all"    : ["clearmirror", "nebulizer", "holder", "endorphinkit", "emerald", "pendant", "devil", "stonetomb"],
         "sin"    : True
     }, {
         "checks" : ["Burn", "smallBurn", (315, 370), "reBurn", "bigBurn", 0],
-        "upties": [
-            {"polarization": 1},
-        ],
+        "upties": [],
         "tiered_fusions": [],
         "strict_fusions": [],
-        "buy"    : ["polarization"], # order is important
-        "all"    : ["polarization"],
+        "buy"    : ["carmilla", "motheclipse", "polarization", "contaminatedneedle"], # order is important
+        "all"    : ["carmilla", "motheclipse", "polarization", "contaminatedneedle"],
         "sin"    : True
     }
     ],

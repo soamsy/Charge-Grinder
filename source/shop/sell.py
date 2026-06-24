@@ -5,11 +5,12 @@ from source.utils.utils import *
 from source.shop.fuse import simulate_all_tiered_fusions
 
 def sell_unnecessary():
+    if p.FINISHED_ALL_FUSIONS or p.FINISHED_ALL_UPTIES:
+        return
     open_sell_menu()
     get_inventory(location="sell")
-    if not has_all_tier_fusions():
-        sell_junk()
-    # sacrifice_fusion_material_for_uptie()
+    sell_junk()
+    print("Closing sell panel")
     close_panel()
 
 # Function for later, it's not necessary right now
@@ -19,9 +20,11 @@ def sell_unnecessary():
 def sell_junk():
     bottom_up_coord_list = allowed_coords()
     if bottom_up_coord_list:
-        sell([bottom_up_coord_list[0]])
+        sell(bottom_up_coord_list)
         get_inventory(location="sell")
         # bottom_up_coord_list = allowed_coords()
+    if bottom_up_coord_list:
+        time.sleep(0.2)
 
 def sell(bottom_up_coord_list):
     def sell_from_region(starting_row, reg, row_height):
@@ -59,6 +62,12 @@ def search_sell(bottom_up_coord_list, starting_row, reg, row_height):
                 return -1
             time.sleep(0.2)
     return usable_rows
+
+def realign_inventory():
+    have = p.INVENTORY["have"]
+    gifts = [(loc, item) for loc, item in have.items()]
+    all_locs = [loc for loc, item in have]
+
 
 def allowed_coords():
     tiers_to_keep, tiers_missing = simulate_all_tiered_fusions()

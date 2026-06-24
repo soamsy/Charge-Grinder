@@ -211,7 +211,7 @@ def pack():
             break
         if skip != skips:
             win_click(1617, 62, tsize=(240, 60))
-            time.sleep(1.3)
+            time.sleep(1.4)
     
     wait_while_condition(lambda: now.button("PackChoice"), interval=0.1)
     if p.LVL != 1: p.MOVE_ANIMATION = True

@@ -39,6 +39,7 @@ def fuse():
         fuse_any_strict_fusions(i)
         missing_tiers = fuse_one_tiered_fusion(i)
         if missing_tiers:
+            fuse_one_tiered_fusion(i, skips=1)
             return missing_tiers
 
     return fuse_lunar()
@@ -101,7 +102,7 @@ def fuse_one_lunar():
         perform_clicks(to_click)
     return None
 
-def fuse_one_tiered_fusion(i):
+def fuse_one_tiered_fusion(i, skips=0):
     named_locs = get_named_locs()
     team = p.GIFTS[i]
     print("fuse_one_tiered_fusion", i, named_locs)
@@ -109,19 +110,25 @@ def fuse_one_tiered_fusion(i):
         for item, tier in fusion.items():
             if item in named_locs:
                 continue
+            if skips > 0:
+                skips -= 1
+                continue
             print("want to fuse ", fusion, " and I own ", named_locs)
             combo, missing = decide_fusion(tier)
             if missing:
                 lower_tiers = [t for t in missing.keys() if t < tier]
                 lower_tiers.sort()
                 if lower_tiers:
-                    nested_combo, nested_missing = decide_fusion(lower_tiers[0])
+                    nested_combo, nested_missing = decide_fusion(lower_tiers[0], exclude_tiers=missing)
                     if not nested_missing:
-                        return execute_tier_fuse(lower_tiers[0], i)
-            return execute_tier_fuse(tier, i)
+                        execute_tier_fuse(lower_tiers[0], i, exclude_tiers=missing)
+                        return execute_tier_fuse(tier, i)
+                return missing
+            else:
+                return execute_tier_fuse(tier, i)
     return None
 
-def simulate_all_tiered_fusions():
+def simulate_all_tiered_fusions(include_lower_tiers=True):
     named_locs = get_named_locs()
     tiers_for_combos = []
     tiers_missing = []
@@ -134,7 +141,7 @@ def simulate_all_tiered_fusions():
                 print("simulate:", "combo", combo, "missing", missing)
                 tiers_for_combos.extend(combo or [])
                 tiers_missing.extend(missing or [])
-                if missing:
+                if missing and include_lower_tiers:
                     lower_tiers = [t for t in missing.keys() if t < tier]
                     print("lower_tiers", lower_tiers)
                     if lower_tiers:
@@ -150,7 +157,7 @@ def fuse_any_strict_fusions(i):
     for fusion in team["strict_fusions"]:
         for name, ingredients in fusion.items():
             missing = {}
-            for ingredient, tier in ingredients:
+            for ingredient, tier in ingredients.items():
                 if ingredient not in named_locs:
                     missing[ingredient] = tier
             if missing:
@@ -223,9 +230,9 @@ def find_locs_for_fusion(combo, coords):
         return []
     return locs
 
-def execute_tier_fuse(tier, affinity):
+def execute_tier_fuse(tier, affinity, exclude_tiers={}):
     to_click = []
-    combo, missing = decide_fusion(tier)
+    combo, missing = decide_fusion(tier, exclude_tiers=exclude_tiers)
     if missing:
         return missing
     
@@ -268,16 +275,18 @@ def click_locs(locs):
         win_moveTo(1194, 841)
         time.sleep(0.2)
 
+    clicks_left = len(locs)
     def scan(starting_row, reg, row_height):
+        nonlocal clicks_left
         usable_rows = get_usable_rows(reg, row_height)
         max_j = starting_row + usable_rows
         for i, j in locs:
             if starting_row <= j < max_j:
                 x, y = to_coords(i, j, reg, row_height)
                 win_click(x, y)
-                win_moveTo(x, y)
-                time.sleep(0.2)
-        return get_usable_rows(reg, row_height)
+                clicks_left -= 1
+                time.sleep(0.1)
+        return get_usable_rows(reg, row_height) if clicks_left > 0 else -1
     # ClickAction((x, y) , ver="forecast!").execute(click_rgb)
 
     scan_entire_inventory_while_parsing(scan, location="fuse")
@@ -307,7 +316,7 @@ def decide_fusion(target_tier, exclude_tiers={}):
         (combo, sum(item_points[t] for t in combo))
         for combo in combos
         if low <= sum(item_points[t] for t in combo) <= high
-        and all([t < target_tier for t in combo])
+        and ((target_tier <= 2 and not exclude_tiers) or all([t < target_tier for t in combo]))
     ]
     print("valid_combos", valid_combos)
     
@@ -369,7 +378,7 @@ def decide_fusion(target_tier, exclude_tiers={}):
             best_missing_cost = missing_cost
             best_total_cost = total
 
-    return best_choice, best_missing
+    return best_choice, best_missing # TODO: sometimes both are None, this is bad
 
 def expected_combo_for(tier):
     expected = {

@@ -6,16 +6,6 @@ from itertools import product
 
 exit_if = ["loading", "Move", "EGObin", "encounterreward", "victory", "defeat", "PackChoice", "Confirm"]
 
-sins = { # bgr values
-    "wrath"   : (  0,   0, 254),
-    "gloom"   : (239, 197,  26),
-    "sloth"   : ( 49, 205, 251),
-    "lust"    : (  0, 108, 254),
-    "pride"   : (213,  75,   1),
-    "gluttony": (  1, 228, 146),
-    "envy"    : (222,   1, 150),
-}
-
 # HARD MD
 comps = [0.71, 0.77, 0.89, 1]
 low = {"struggle": (0, 199, 252), "hopeless": (2, 245, 214)}
@@ -121,21 +111,59 @@ def select_ego():
 
 
 def is_ego():
-    threshold=60
     background = screenshot(region=REG["ego_usage"])
-    for color in sins.values():
-        color = np.array(color).astype(int)
-        lower_bound = np.clip(color - threshold, 0, 255)
-        upper_bound = np.clip(color + threshold, 0, 255)
-        mask = cv2.inRange(background, lower_bound, upper_bound)
+    hsv = cv2.cvtColor(background, cv2.COLOR_BGR2HSV)
+    for hue, _, hue_threshold, _, _ in sins.values():
+        lo_h = hue - hue_threshold
+        hi_h = hue + hue_threshold
+        if lo_h < 0:
+            mask = cv2.bitwise_or(
+                cv2.inRange(hsv, np.array([lo_h + 179, 50, 50]), np.array([179, 255, 255])),
+                cv2.inRange(hsv, np.array([0,          50, 50]), np.array([hi_h, 255, 255])),
+            )
+        else:
+            mask = cv2.inRange(hsv, np.array([lo_h, 50, 50]), np.array([hi_h, 255, 255]))
         if now.button("ego_usage", image=mask, conf=0.8):
             return background
     return None
 
-def get_centroids_by_hue(image, hue, hue_threshold=3, lower_sat=170, upper_sat=255, lower_val=69, upper_val=255, area_min=26):
+def _blended_sat_val_bounds(hue, opacity, bg_samples):
+    """Minimum HSV sat/val for a pure hue at given opacity composited over the given BGR background samples."""
+    fg_bgr = cv2.cvtColor(np.uint8([[[hue % 180, 255, 255]]]), cv2.COLOR_HSV2BGR)[0][0].astype(float)
+    min_sat, min_val = 255, 255
+    for bg in bg_samples:
+        blended = np.clip(opacity * fg_bgr + (1 - opacity) * bg.astype(float), 0, 255).astype(np.uint8)
+        hsv_px = cv2.cvtColor(np.uint8([[blended]]), cv2.COLOR_BGR2HSV)[0][0]
+        min_sat = min(min_sat, int(hsv_px[1]))
+        min_val = min(min_val, int(hsv_px[2]))
+    return max(0, min_sat - 10), max(0, min_val - 10)
+
+def get_centroids_by_hue(image, hue, hue_threshold=3, opacity=0.8,
+                         lower_sat=None, upper_sat=255, lower_val=None, upper_val=255,
+                         area_min=26, area_max=4000):
     comp = p.WINDOW[2] / 1920
     area_min *= comp
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    area_max *= comp
+
+    if lower_sat is None or lower_val is None:
+        h, w = image.shape[:2]
+        cs = max(1, min(8, h // 4, w // 4))
+        corners = [
+            image[0:cs,   0:cs  ],
+            image[0:cs,   w-cs:w],
+            image[h-cs:h, 0:cs  ],
+            image[h-cs:h, w-cs:w],
+        ]
+        bg_samples = [np.median(c.reshape(-1, 3), axis=0) for c in corners]
+        # Always include white — it gives the lowest possible blended saturation
+        # for any hue and sets the permissive floor for the threshold.
+        bg_samples.append(np.array([255.0, 255.0, 255.0]))
+        calc_sat, calc_val = _blended_sat_val_bounds(hue, opacity, bg_samples)
+        if lower_sat is None:
+            lower_sat = calc_sat
+        if lower_val is None:
+            lower_val = calc_val
+
     lower_hue = hue - hue_threshold
     upper_hue = hue + hue_threshold
     ranges = []
@@ -144,12 +172,26 @@ def get_centroids_by_hue(image, hue, hue_threshold=3, lower_sat=170, upper_sat=2
         ranges.append(([0, lower_sat, lower_val], [upper_hue, upper_sat, upper_val]))
     else:
         ranges.append(([lower_hue, lower_sat, lower_val], [upper_hue, upper_sat, upper_val]))
-    
-    # print("ranges", ranges)
-    masks = [cv2.inRange(hsv, np.array(low), np.array(high)) for low, high in ranges]
+
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    print(f"[hue_debug] hue={hue} thresh={hue_threshold} opacity={opacity} lower_sat={lower_sat} lower_val={lower_val}")
+    for lo, hi in ranges:
+        print(f"  range: H[{lo[0]}–{hi[0]}] S[{lo[1]}–{hi[1]}] V[{lo[2]}–{hi[2]}]")
+
+    masks = [cv2.inRange(hsv, np.array(lo), np.array(hi)) for lo, hi in ranges]
     mask = masks[0]
     if len(masks) > 1:
         mask = cv2.bitwise_or(masks[0], masks[1])
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    ts = time.time()
+    cv2.imwrite(f"testing/hue_debug_input_{hue}_{ts}.png", image)
+    cv2.imwrite(f"testing/hue_debug_mask_{hue}_{ts}.png", mask)
+    hsv_vis = hsv.copy()
+    hsv_vis[:, :, 1] = np.maximum(hsv_vis[:, :, 1], 255)
+    hsv_vis[:, :, 2] = np.maximum(hsv_vis[:, :, 2], 255)
+    cv2.imwrite(f"testing/hue_debug_hsvmap_{hue}_{ts}.png", cv2.cvtColor(hsv_vis, cv2.COLOR_HSV2BGR))
+    print(f"  mask nonzero pixels: {cv2.countNonZero(mask)}")
 
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
         mask, connectivity=8, ltype=cv2.CV_32S
@@ -159,10 +201,17 @@ def get_centroids_by_hue(image, hue, hue_threshold=3, lower_sat=170, upper_sat=2
     for i in range(1, num_labels):
         area = stats[i, cv2.CC_STAT_AREA]
         x, y = centroids[i]
-        if area > area_min:
+        if area > area_min and area <= area_max:
+            status = "KEPT"
+        elif area <= area_min:
+            status = f"dropped (min={area_min:.1f})"
+        else:
+            status = f"dropped (max={area_max:.1f})"
+        print(f"  component {i}: area={area} centroid=({x:.1f},{y:.1f}) {status}")
+        if area > area_min and area <= area_max:
             points.append((int(x/comp), int(y/comp)))
 
-    # print("hue", hue, ", ", len(points), "points", points)
+    print(f"  → {len(points)} centroids returned")
     return points
 
 def is_solo(gear_start, gear_end):
@@ -177,7 +226,7 @@ def count_sinners(gear_start, gear_end):
     height = end_y - start_y
     num_actions = round(width / 123)
     hp_numbers_image = screenshot(region=(start_x, start_y, width, height))
-    centroids = get_centroids_by_hue(hp_numbers_image, 8, lower_sat=200, lower_val=180)
+    centroids = get_centroids_by_hue(hp_numbers_image, 8, opacity=1.0, lower_sat=200, lower_val=180)
     # debug_points([(x+start_x, y+start_y) for x, y in centroids], "debug_count_sinners.png")
     bins = []
     bin_size = width / num_actions
@@ -192,74 +241,36 @@ def count_sinners(gear_start, gear_end):
     count = sum(is_bin_filled)
     return count
 
-def find_skill3(background, known_rgb, threshold=40, min_pixels=10, max_pixels=160, sin="envy"):
-    # cv2.imwrite('debug_skill3_found.png', background)
-    median_rgb = np.median(background, axis=(0, 1)).astype(int)
-    blended_rgb = (median_rgb * 0.45 + np.array(known_rgb) * 0.55).astype(int)
+sins = {
+    "wrath"   : (0, 0.52, 4, 12, 250),
+    "gloom"   : (96, 0.5, 5, 12, 250),
+    "sloth"   : (23, 0.5, 5, 12, 250),
+    "lust"    : (13, 0.4, 5, 12, 250),
+    "pride"   : (110, 0.5, 5, 13, 250),
+    "gluttony": (41, 0.5, 5, 12, 250),
+    "envy"    : (140, 0.40, 6, 12, 250),
+}
 
-    comp = p.WINDOW[2] / 1920
-    
-    lower_bound = np.clip(blended_rgb - threshold, 0, 255)
-    upper_bound = np.clip(blended_rgb + threshold, 0, 255)
-    mask = cv2.inRange(background, lower_bound, upper_bound)
+def find_skill3(background, sin="envy"):
+    hue, opacity, hue_threshold, min_pixels, max_pixels = sins[sin]
+    points = get_centroids_by_hue(background, hue, hue_threshold=hue_threshold, opacity=opacity, area_min=min_pixels, area_max=max_pixels)
 
-    # collecting clusters (colors that are directly connected)
-    num_labels, _, stats, centroids = cv2.connectedComponentsWithStats(mask)
-    
-    cluster_centers = []
-
-    # some pixel value checks (colors in cluster may be disconnected)
-    for i in range(1, num_labels):
-        area = stats[i, cv2.CC_STAT_AREA]
-        center = centroids[i]
-        
-        if min_pixels*comp <= area <= max_pixels*comp:
-            x = int(center[0])
-            x1, x2 = round(max(0, x-25*comp)), round(min(background.shape[1], x+25*comp))
-            y1, y2 = 0, round(10*comp)
-            
-            region_mask = mask[y1:y2, x1:x2]
-            similar_pixels = np.count_nonzero(region_mask)
-
-            if 150*comp >= similar_pixels >= 15*comp:
-                cluster_centers.append(center)
-    # print(sin)
-    # print(centroids)
-    # print(cluster_centers)
-
-    # merging neightbouring clusters
+    # merge nearby centroids that belong to the same skill icon
+    centers = [np.array(pt, dtype=float) for pt in points]
     merged = []
-    while cluster_centers:
-        current = cluster_centers.pop()
-        group = [c for c in cluster_centers if np.linalg.norm(current - c) <= 50*comp]
-        cluster_centers = [c for c in cluster_centers if np.linalg.norm(current - c) > 50*comp]
+    while centers:
+        current = centers.pop()
+        group = [c for c in centers if np.linalg.norm(current - c) <= 50]
+        centers = [c for c in centers if np.linalg.norm(current - c) > 50]
         merged.append(np.mean([current] + group, axis=0))
-    
-    # filter by color patterns
-    filtered = []
-    while merged:
-        center = merged.pop()
-        x = int(center[0])
-        x1, x2 = round(max(0, x-30*comp)), round(min(background.shape[1], x+30*comp))
-        y1, y2 = 0, round(min(mask.shape[0], 10*comp))
 
-        region_mask = mask[y1:y2, x1:x2]
-        pattern = np.zeros((y2-y1, x2-x1), dtype=np.uint8)
-        pattern = np.maximum(pattern, region_mask)
-        try:
-            if pattern.shape[1] < 33*comp : raise gui.ImageNotFoundException
-            LocateGray.try_locate(PTH[str(sin)], pattern, region=(0, 0, pattern.shape[1], round(10*comp)), conf=0.74, method=cv2.TM_CCORR_NORMED)
-            filtered.append(int(center[0]*1920/p.WINDOW[2]))
-        except gui.ImageNotFoundException:
-            # print(sin)
-            # cv2.imwrite(f"{time.time()}{sin}.png", pattern)
-            continue
+    filtered = [int(c[0]) for c in merged]
     if filtered:
         print(sin, "found at", filtered)
     return filtered
 
 def select_team():
-    time.sleep(0.5)
+    time.sleep(0.3)
 
     affinity = p.TEAM[0].lower()
     idx = p.NAME_ORDER
@@ -354,25 +365,25 @@ def chain(gear_start, gear_end, check_lowskill=False):
     bin_length = length / skill_num
     half_bin = bin_length / 2
     
-    top_padding = 38
+    top_padding = 28 + skill_num * 4
     top_start_x = skill_start_x + top_padding
     top_end_x = skill_end_x - top_padding
     top_length = top_end_x - top_start_x
-    background = screenshot(region=(top_start_x, 775, top_length, 10))
+    skill3_tip_background = screenshot(region=(top_start_x, 775, top_length, 10))
     skill3 = []
     for sin in sins.keys():
-        skill3 += find_skill3(background, sins[sin], sin=sin)
+        skill3 += find_skill3(skill3_tip_background, sin=sin)
     moves = [False]*skill_num
     for coord in skill3:
         moves[int(skill_num * coord / top_length)] = True
 
-    def sin_search(hue, y_loc, padding=0, filename=""):
+    def sin_search(hue, y_loc, padding=0, opacity=1.0, area_min=30, hue_threshold=3, area_max=1000):
         comp = p.WINDOW[2] / 1920
         padding *= comp
         left = skill_start_x + padding
         width = length - padding * 2
         row = screenshot(region=(left, y_loc, width, 20))
-        points = get_centroids_by_hue(row, hue)
+        points = get_centroids_by_hue(row, hue, opacity=opacity, area_min=area_min, area_max=area_max)
         # if filename:
             # debug_points([(x+left, y+y_loc) for x, y in points], filename)
         indexes = {int(skill_num * x / width) for x, _ in points}
@@ -381,10 +392,10 @@ def chain(gear_start, gear_end, check_lowskill=False):
     ryoshu_x = -1
     if p.is_saikai():
         if is_solo(gear_start, gear_end):
-            wrath_top = sin_search(-3, 795, 40, "debug_top_row.png")
-            wrath_bottom = sin_search(-3, 885, 5, "debug_bottom_row.png")
-            pride_top = sin_search(109, 795, 15)
-            pride_bottom = sin_search(109, 885, 5)
+            wrath_top = sin_search(-3, 795, padding=30, opacity=0.27, area_min=35)
+            wrath_bottom = sin_search(0, 885, padding=10, opacity=0.18, area_min=25, hue_threshold=1)
+            pride_top = sin_search(109, 795, padding=30, opacity=0.4, area_min=35)
+            pride_bottom = sin_search(109, 885, padding=10, opacity=0.4, area_min=35)
             wraths = set()
             prides = set()
             for i in range(skill_num):
@@ -412,12 +423,12 @@ def chain(gear_start, gear_end, check_lowskill=False):
             print("dodges", dodges)
             for i in range(skill_num):
                 if i in wraths:
-                    moves[i] = i in wrath_bottom
+                    moves[i] = i in wrath_bottom and i not in wrath_top
                 elif i in dodges:
                     moves[i] = True
                     win_click(skill_start_x + bin_length * i + half_bin, 990)
                 else:
-                    moves[i] = i in pride_bottom
+                    moves[i] = i in pride_bottom and i not in pride_top
         else:
             ryoshu_x = get_saikai_ryoshu()
             if ryoshu_x and 0 <= ryoshu_x:
@@ -472,7 +483,7 @@ def chain(gear_start, gear_end, check_lowskill=False):
                 win_moveTo(int(curr_x - half_bin), curr_y - 80, duration=0.2, tsize=(20, 20), inertia=True)
                 gui.mouseDown()
 
-    win_moveTo(final_x, final_y, duration=0.30, tsize=(5, 5), inertia=True)
+    win_moveTo(final_x, final_y, duration=0.43, tsize=(2, 2), inertia=True)
     gui.mouseUp()
 
 def debug_points(points, filename):
@@ -509,6 +520,7 @@ def fight(lux=False):
     attempts = 0
     should_winrate = (lux and not p.is_saikai()) or p.WINRATE
     check_lowskill = p.is_on_hard()
+    first_turn = True
     while True:
         ck = False
         gear_start = None
@@ -522,12 +534,15 @@ def fight(lux=False):
                 is_focused = False
                 if should_winrate:
                     raise ValueError("Battle isn't focused but we want to winrate anyway")
+                if first_turn == True:
+                    time.sleep(0.3) # ego gift text pops up at battle start, making it hard to detect slotted skills
+                    first_turn = False
                 chain(gear_start, gear_end, check_lowskill)
                 p.EXPECT_CHAIN = True
                 check_lowskill = False
 
                 # success check
-                time.sleep(1)
+                time.sleep(0.6)
                 if now.button("winrate"):
                     gui.press("p", 1, 0.1)
                     time.sleep(0.3)
@@ -558,7 +573,7 @@ def fight(lux=False):
         if p.EXPECT_CHAIN:
             if gear_start:
                 gx, gy = gear_start
-                win_moveTo(gx-150, gy+120)
+                win_moveTo(max(10, gx-150), gy+120)
             else:
                 win_moveTo(300, 960)
             p.EXPECT_CHAIN = False
@@ -612,7 +627,7 @@ def fight(lux=False):
                         if p.EXPECT_REWARD:
                             win_moveTo(1000, 950)
                         else:
-                            win_moveTo(1600, 400)
+                            win_moveTo(300, 600)
                         p.EXPECT_REWARD = False
                     loading_halt()
                 print("Battle is over")

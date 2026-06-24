@@ -24,19 +24,36 @@ def conf_gift():
 def buy(already_gained, missing, budget, buy_affinity_junk=False):
     gained = {1: 0, 2: 0, 3: 0, 4: 0}
     missing = missing.copy()
+    if p.NUM_PURCHASED >= 4:
+        return gained, missing
     keywordless = [{"buy": [name for name, state in p.KEYWORDLESS.items() if state > 1], "sin": True}]
-    def click_and_purchase(tier, point, tsize=(5, 5)):
-        print(f"buy {tier} at {point}", time.time())
-        nonlocal budget
-        if budget < buy_cost[tier]:
+
+    ts = time.time()
+    def _debug_shelf(suffix, annotations):
+        if p.SHOP_SHELF is None:
             return
-        # debug_points(screenshot(region=(0, 0, 1920, 1080)), [point], f"testing/shelf_click_{time.time()}_{gift}.png")
+        dbg = p.SHOP_SHELF.copy()
+        for (x, y, w, h), color, label in annotations:
+            cv2.rectangle(dbg, (x, y), (x + w, y + h), color, 2)
+            cv2.putText(dbg, label, (x, max(y - 4, 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA)
+        cv2.imwrite(f"testing/shop_buy_{suffix}_{ts}.png", dbg)
+
+    print(f"\n=== buy() budget={budget} missing={missing} affinity_junk={buy_affinity_junk} ===")
+    print(f"  SHOP_TIERS_AVAILABLE: { {t: len(pts) for t, pts in p.SHOP_TIERS_AVAILABLE.items()} }")
+
+    def click_and_purchase(tier, point, tsize=(5, 5)):
+        nonlocal budget
+        print(f"  → purchasing tier {tier} cost={buy_cost[tier]} at {point}  remaining_budget={budget - buy_cost[tier]}")
+        if budget < buy_cost[tier] or p.NUM_PURCHASED >= 4:
+            return
         win_click(point, tsize=tsize)
         conf_gift()
         update_shelf()
         p.NEED_INVENTORY_CHECK = True
         p.NEED_BALANCE_CHECK = True
         budget -= buy_cost[tier]
+        p.NUM_PURCHASED += 1
         gained[tier] += 1
         need = missing.get(tier, 0)
         missing[tier] = need - 1
@@ -49,70 +66,98 @@ def buy(already_gained, missing, budget, buy_affinity_junk=False):
                 if (tier_x, tier_y) <= (x, y) <= (tier_x + 150, tier_y + 150):
                     return tier
         return None
-    
+
     unmet_needs = []
     def want_but_cannot_buy(tier):
-        print("want but cannot buy", tier)
+        print(f"  ✗ want tier {tier} (cost={buy_cost[tier]}) but budget={budget} is too low")
         unmet_needs.append(buy_cost[tier])
-        pass
 
+    # --- named gifts ---
     teams = keywordless + p.GIFTS
+    all_gifts_to_buy = [gift for team in teams for gift in team["buy"] if team["sin"]]
+    if p.INVENTORY["have"]:
+        known_to_have = [item["name"] for loc, item in p.INVENTORY["have"].items() if "name" in item]
+        all_gifts_to_buy = [gift for gift in all_gifts_to_buy if gift not in known_to_have]
+    print(f"  named gifts to look for: {all_gifts_to_buy}")
+    named_annotations = []
     for team in teams:
         if not team["sin"]:
             continue
-        all_gifts_to_buy = [gift for team in teams for gift in team["buy"]]
         for gift in all_gifts_to_buy:
             try:
-                x, y = gui.center(LocateRGB.try_locate(PTH[gift], image=p.SHOP_SHELF, comp=0.75, conf=0.83))
+                box = LocateRGB.try_locate(PTH[gift], image=p.SHOP_SHELF, comp=0.75, conf=0.83)
+                x, y = gui.center(box)
+                bx, by, bw, bh = box
                 tier = find_tier(x, y)
                 if tier is None:
-                    print(f"Error, could not find tier of gift {gift} despite it being at {(x, y)}")
+                    print(f"  ? found {gift} at ({x},{y}) but couldn't determine tier")
+                    named_annotations.append(((bx, by, bw, bh), (0, 165, 255), f"{gift}:no-tier"))
                     continue
-
-                if budget < buy_cost[tier]:
+                cost = buy_cost[tier]
+                if budget < cost:
+                    print(f"  ✗ {gift} tier={tier} cost={cost} budget={budget} — too expensive")
+                    named_annotations.append(((bx, by, bw, bh), (0, 0, 255), f"{gift} t{tier} ${cost} NO$$"))
                     want_but_cannot_buy(tier)
                     continue
-
-                print(f"buying named item", gift)
+                print(f"  ✓ buying {gift} tier={tier} cost={cost} at ({x},{y})")
+                named_annotations.append(((bx, by, bw, bh), (0, 255, 0), f"{gift} t{tier} ${cost}"))
+                _debug_shelf(f"before_{gift}", named_annotations)
                 click_and_purchase(tier, (x+809, y+300))
                 schedule_for_uptie(gift)
             except gui.ImageNotFoundException:
-                continue
+                print(f"  - {gift} not found on shelf")
+    _debug_shelf("named_gifts", named_annotations)
 
+    # --- affinity junk ---
     if buy_affinity_junk:
+        print(f"  affinity junk pass")
         for team in p.GIFTS:
-            locs = LocateRGB.locate_all(PTH[team["checks"][0]], image=p.SHOP_SHELF, method=cv2.TM_SQDIFF_NORMED, comp=0.88, conf=0.9)
+            check_key = team["checks"][0]
+            locs = LocateRGB.locate_all(PTH[check_key], image=p.SHOP_SHELF, method=cv2.TM_SQDIFF_NORMED, comp=0.88, conf=0.9)
             locs = [gui.center(loc) for loc in locs]
-            print("locs affinity", locs)
-            debug_points(p.SHOP_SHELF, locs, f"testing/affinity_junkers_{time.time()}.png")
+            print(f"  affinity '{check_key}' matched at {locs}")
+            affinity_annotations = [((x-5, y-5, 10, 10), (255, 255, 0), check_key) for x, y in locs]
             for tier in [3, 2, 1, 4]:
                 if budget < buy_cost[tier]:
+                    print(f"  ✗ affinity junk tier {tier}: budget={budget} < cost={buy_cost[tier]}")
                     continue
                 points = p.SHOP_TIERS_AVAILABLE.get(tier, [])
                 for x, y in points:
-                    target = None
-                    for x2, y2 in locs:
-                        if x <= x2 <= x+100 and y <= y2 <= y + 100:
-                            target = (x, y)
-                            break
-                    if target is not None:
+                    has_affinity = any(x <= x2 <= x+100 and y <= y2 <= y+100 for x2, y2 in locs)
+                    if not has_affinity:
+                        print(f"    skip tier {tier} slot ({x},{y}) — doesn't match affinity")
+                        affinity_annotations.append(((x, y, 100, 100), (0, 165, 255), f"t{tier} skip"))
                         continue
-                    print(f"buying affinity junk", tier, (x, y))
-                    cv2.imwrite(f"testing/affinity_junk_{time.time()}.png", screenshot((x+809, y+300, 120, 120)))
+                    print(f"    buying affinity junk tier {tier} at ({x},{y})")
+                    affinity_annotations.append(((x, y, 100, 100), (0, 255, 0), f"t{tier} buy"))
+                    _debug_shelf(f"affinity_before_t{tier}", affinity_annotations)
                     click_and_purchase(tier, (x+809, y+300))
+            _debug_shelf(f"affinity_{check_key}", affinity_annotations)
 
+    # --- fill missing tiers ---
+    if missing:
+        print(f"  filling missing tiers: {missing}")
     for tier in sorted(missing.keys(), reverse=True):
         count_needed = missing[tier]
+        avail = p.SHOP_TIERS_AVAILABLE.get(tier, [])
+        print(f"  tier {tier}: need {count_needed}, available slots={len(avail)}")
+        tier_annotations = []
+        for i, (sx, sy) in enumerate(avail):
+            tier_annotations.append(((sx, sy, 100, 100), (200, 200, 200), f"t{tier} slot{i}"))
         for _ in range(count_needed):
             if not p.SHOP_TIERS_AVAILABLE[tier]:
+                print(f"    no slots left for tier {tier}")
                 break
             if budget < buy_cost[tier]:
                 want_but_cannot_buy(tier)
                 break
-            print(f"buying tier {tier} and this is available: {p.SHOP_TIERS_AVAILABLE}", time.time())
             x, y = p.SHOP_TIERS_AVAILABLE[tier][-1]
+            print(f"    buying tier {tier} from slot ({x},{y})")
+            tier_annotations.append(((x, y, 100, 100), (0, 255, 0), f"t{tier} BUY"))
+            _debug_shelf(f"missing_t{tier}", tier_annotations)
             click_and_purchase(tier, (x+809, y+300))
 
+    print(f"=== buy() done: gained={gained} remaining_budget={budget} unmet={unmet_needs} ===\n")
     for tier, count in already_gained.items():
         gained[tier] += count
     return gained, missing, budget, unmet_needs
@@ -135,7 +180,7 @@ def current_budget():
     return budget
 
 def buy_fusion_materials():
-    tiers_owned, tiers_missing = simulate_all_tiered_fusions()
+    tiers_owned, tiers_missing = simulate_all_tiered_fusions(include_lower_tiers=False)
     print("buy_fusion_materials: tiers_to_keep", tiers_owned, "tiers_missing", tiers_missing)
     if not tiers_missing:
         return
@@ -201,6 +246,7 @@ def fuse_with_buys():
     print("fuse_with_buys")
     missing = fuse()
     if not missing:
+        print("not missing anything??")
         return True
     print("missing in fuse_with_buys", missing)
     close_panel()
@@ -208,7 +254,6 @@ def fuse_with_buys():
     gained, missing = buy_needed(missing)
     if missing:
         return False
-
     fuse()
     return True
 
@@ -216,9 +261,11 @@ def fuse_loop():
     if has_all_fusions():
         return
 
-    for i in range(3):
+    for i in range(4):
+        print(f"fusing for {i}-th time")
         should_continue = fuse_with_buys()
         if not should_continue:
+            print("won't continue fusing")
             break
         if has_all_fusions():
             break
@@ -226,6 +273,7 @@ def fuse_loop():
 
 def leave():
     p.EXPECT_ACTION = "move"
+    p.EXPECT_REWARD = True
     ClickAction((1705, 967), ver="ConfirmInvert").execute(click)
     wait_while_condition(lambda: loc.button("ConfirmInvert", wait=0.3), lambda: gui.press("space"), interval=0.2, timer=5)
     wait_while_condition(lambda: now.button(p.SUPER), timer=5)
@@ -242,8 +290,12 @@ def invalidate_inventory():
     p.NEED_BALANCE_CHECK = True
     p.REFRESH_COUNT = 0
     p.REFRESH_COUNT = 0
+    p.NUM_PURCHASED = 0
+    p.NUM_PURCHASED_SKILL3 = 0
 
 def should_skip():
+    if p.FINISHED_ALL_FUSIONS and p.FINISHED_ALL_UPTIES:
+        return True
     last_level = 5 + p.EXTREME*11
     return p.SKIP and p.LVL >= last_level
 
@@ -257,12 +309,12 @@ def enter_shop():
     if stuck_in_menu():
         return False
 
-    from pprint import pprint
-    print("GIFTS on shop enter:")
-    pprint(p.GIFTS)
     invalidate_inventory()
     skip = should_skip()
-    if not skip:
+    if skip:
+        update_skill3(current_budget())
+        win_moveTo(1705, 837)
+    else:
         try:
             update_shelf()
             print("sell unnecessary")
@@ -276,8 +328,7 @@ def enter_shop():
             print("fuse loop")
             fuse_loop()
             print("buy extra")
-            if not p.is_saikai():
-                buy_extra()
+            buy_extra()
             print("apply upties")
             if balance() < sum(all_uptie_costs()):
                 sell_unnecessary()
@@ -286,8 +337,9 @@ def enter_shop():
             import traceback
             print("wtf")
             traceback.print_exc()
+            if not now.button(p.SUPER):
+                gui.press("esc")
             raise e
 
     leave()
-    p.EXPECT_ACTION = "move"
     return True

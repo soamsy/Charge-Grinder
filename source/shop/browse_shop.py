@@ -202,7 +202,7 @@ def get_named_locs(location="fuse"):
     return {gift["name"]: loc for loc, gift in have.items() if "name" in gift}
 
 def update_shelf():
-    wait_while_condition(lambda: not now.button("shopcorner"), timer=1.5)
+    wait_while_condition(lambda: not now.button("shopcorner"), timer=1.0)
     time.sleep(0.1)
     p.SHOP_SHELF = screenshot(region=REG["buy_shelf"])
     p.SHOP_SHELF = rectangle(p.SHOP_SHELF, (52, 33), (650 if p.SUPER == "supershop" else 224, 195), (0, 0, 0), -1)
@@ -213,9 +213,18 @@ def update_shelf():
     cv2.imwrite(f"testing/update_shelf_{time.time()}_d.png", p.SHOP_SHELF)
     p.SHOP_TIERS_AVAILABLE = get_shop()
     print("SHOP_TIERS_AVAILABLE", p.SHOP_TIERS_AVAILABLE)
+    _tier_colors = {1: (255, 80, 80), 2: (80, 255, 80), 3: (80, 80, 255), 4: (80, 255, 255)}
+    dbg = p.SHOP_SHELF.copy()
+    for tier, pts in p.SHOP_TIERS_AVAILABLE.items():
+        color = _tier_colors.get(tier, (200, 200, 200))
+        for (x, y) in pts:
+            cv2.rectangle(dbg, (x - 50, y - 50), (x + 50, y + 50), color, 2)
+            cv2.putText(dbg, f"t{tier}", (x - 14, y + 6),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
+    cv2.imwrite(f"testing/shelf_tiers_{time.time()}.png", dbg)
 
 def get_shop():
-    tier1 = [gui.center(box) for box in LocateRGB.locate_all(PTH["buy1"], image=p.SHOP_SHELF, threshold=3.5, conf=0.92, method=cv2.TM_SQDIFF_NORMED)]
+    tier1 = [gui.center(box) for box in LocateRGB.locate_all(PTH["buy1"], image=p.SHOP_SHELF, threshold=4, conf=0.92, method=cv2.TM_SQDIFF_NORMED)]
     tier4 = [gui.center(box) for box in LocateRGB.locate_all(PTH["buy4"], image=p.SHOP_SHELF, threshold=10, conf=0.92, method=cv2.TM_SQDIFF_NORMED)]
     tier1 = filter_x_distance(tier1)
     tiers_available = {1: [], 2: [], 3: [], 4: []}
@@ -357,7 +366,9 @@ def inventory_check(reg, starting_row, row_height):
             if gift in all_upties:
                 uptie_region = fuse_shelf[int((y-66-reg[1])*comp):int((y-22-reg[1])*comp), int((x-14-reg[0])*comp):int((x+55-reg[0])*comp)]
                 try:
-                    if not LocateRGB.check(PTH["+"], image=uptie_region, wait=False):
+                    uptie_count = LocateRGB.locate_all(PTH["+"], image=uptie_region, wait=False)
+                    print(f"uptie level {len(uptie_count)} for {gift}")
+                    if len(uptie_count) < 2:
                         schedule_for_uptie(gift)
                 except cv2.error:
                     print("Uptie detection failed", gift)
@@ -431,6 +442,7 @@ def has_all_fusions():
 
     if p.EXTREME and "lunarmemory" not in get_named_locs():
         return False
+    p.FINISHED_ALL_FUSIONS = True
     return True
 
 def tier_fusion_count():
@@ -455,7 +467,7 @@ def balance():
     start_time = time.time()
     # gui.screenshot(f"cost{time.time()}.png", region=(857, 175, 99, 57)) # debugging
     while bal == -1:
-        if time.time() - start_time > 20: raise RuntimeError("Infinite loop exited")
+        if time.time() - start_time > 10: raise RuntimeError("Infinite loop exited")
         digits = []
         for i in range(9, -1, -1):
             pos = [gui.center(box) for box in LocateRGB.locate_all(PTH[f"cost{i}"], region=(837, 175, 119, 57), threshold=7, conf=0.9, method=cv2.TM_SQDIFF_NORMED)]

@@ -2,6 +2,9 @@ from source.shop.browse_shop import *
 from source.shop.sell import *
 
 def update_skill3(budget):
+    limit = 2 if p.SUPER == "supershop" else 1
+    if p.NUM_PURCHASED_SKILL3 >= limit:
+        return budget
     if budget < 120:
         return
     if p.EXTREME or p.is_saikai():
@@ -63,4 +66,5 @@ def buy_skill3():
             win_click(772, 800)
             return True
     connection()
+    p.NUM_PURCHASED_SKILL3 += 1
     return True

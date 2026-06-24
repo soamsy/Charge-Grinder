@@ -52,6 +52,8 @@ def apply_upties():
         p.UPTIE_INCOMPLETE_QUEUE.append(gift)
     for gift in uptie_inventory_gifts(to_uptie_full, 2):
         p.UPTIE_QUEUE.remove(gift)
+    if are_upties_done():
+        p.FINISHED_ALL_UPTIES = True
     close_panel()
 
 def uptie_inventory_gifts(gift_list, times):
@@ -109,3 +111,22 @@ def all_uptie_costs():
             costs.append(enhance_cost_second[tier])
     print("uptie_costs", costs, "uptie_queue", p.UPTIE_QUEUE, "uptie_half_queue", p.UPTIE_INCOMPLETE_QUEUE)
     return costs
+
+def are_upties_done():
+    all_uptie_names = []
+    for team in p.GIFTS:
+        for uptie in team["upties"]:
+            for name, tier in uptie.items():
+                all_uptie_names.append(name)
+    owned_names = [gift["name"] for gift in p.INVENTORY["have"].values() if "name" in gift]
+    for name in all_uptie_names:
+        if name in p.UPTIE_SCHEDULED and not name in p.UPTIE_QUEUE and name not in p.UPTIE_INCOMPLETE_QUEUE:
+            continue
+        if name in owned_names and not name in p.UPTIE_SCHEDULED:
+            print(f"Unexpected! {name} never got uptied")
+            p.UPTIE_SCHEDULED.add(name)
+            if name not in p.UPTIE_QUEUE:
+                p.UPTIE_QUEUE.append(name)
+
+        return False
+    return True

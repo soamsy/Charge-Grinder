@@ -15,6 +15,9 @@ def event():
     while True:
         if time.time() - start_time > 100:
             return False
+        if time.time() - start_time > 6:
+            if now.button("pause"):
+                return False
         if p.LIMBUS_NAME not in (win := gui.getActiveWindowTitle()): pause(win)
 
         now_click.button("skip")

@@ -695,6 +695,7 @@ def moveTo(x, y, duration=0, delay=0.0, tsize=(3.0, 3.0), offset_x=0, offset_y=0
         time.sleep(randomize_with_profile(delay, profile=profile, key="delay_jitter"))
 
     duration_override = duration if duration and duration > 0 else None
+    duration_override = duration_override / 1.5 if duration_override is not None else None
     
     while True:
         traj = build_trajectory(
@@ -750,7 +751,7 @@ def dragTo(x, y, duration=0.1, button='left', tsize=(3.0, 3.0), start_x=None, st
     if start_x is not None and start_y is not None:
         moveTo(start_x, start_y, tsize=tsize)
     mouseDown(button, delay=0.03)
-    moveTo(x, y, duration=duration, tsize=tsize, n_sub=1, inertia=False)
+    moveTo(x, y, duration=duration*1.5, tsize=tsize, n_sub=1, inertia=False)
     mouseUp(button, delay=0.03)
 
     if hook:

@@ -83,7 +83,7 @@ def dungeon_start():
         lambda: win_click(1588, 567) if p.EXTREME and now_rgb.button("infinite_off") else None,
         Action("Start"),
         lambda: win_moveTo(1150, 730),
-        lambda: time.sleep(0.1),
+        lambda: time.sleep(0.2),
         Action("enterInvert", ver="ConfirmTeam", click=(1150, 730)),
         select_team,
         lambda: try_click.button("ConfirmTeam"),
@@ -141,7 +141,7 @@ def collect_rewards():
         interval=0.1
     )
 
-def click_bonus():
+def turn_off_bonus():
     if p.is_on_hard():
         now_rgb.button("bonus", "hardbonus", click=True)
     else:
@@ -151,19 +151,18 @@ def click_bonus():
 
 def bonus_gone():
     if p.is_on_hard():
-        if not loc_rgb.button("bonus", "hardbonus", wait=1):
+        if not loc_rgb.button("bonus", "hardbonus", wait=0.2):
             return now_rgb.button("bonus_off", "hardbonus", conf=0.8)
         else: return False
-    elif not loc_rgb.button("bonus", wait=1):
+    elif not loc_rgb.button("bonus", wait=0.2):
         return now_rgb.button("bonus_off", conf=0.8)
     else: return False
 
 def handle_bonus():
-    time.sleep(0.5)
-    if p.BONUS or bonus_gone(): return
-
-    if not wait_while_condition(lambda: not bonus_gone(), click_bonus):
+    time.sleep(0.1)
+    if not p.BONUS and not bonus_gone() and not wait_while_condition(lambda: not bonus_gone(), turn_off_bonus):
         raise RuntimeError
+    return
 
 TERMIN = [
     Action("victory", click=(1693, 841)),
@@ -323,7 +322,7 @@ def main_loop():
                     sidequest = p.EXPECT_ACTION
                     p.EXPECT_ACTION = None
                     print("got sidequest!", sidequest)
-                    time.sleep(0.3)
+                    time.sleep(0.1)
                     ck += actions[sidequest]()
         except RuntimeError:
             handle_fuckup()
