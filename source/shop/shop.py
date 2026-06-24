@@ -32,10 +32,13 @@ def buy(already_gained, missing, budget, buy_affinity_junk=False):
     def _debug_shelf(suffix, annotations):
         if p.SHOP_SHELF is None:
             return
+        comp = p.WINDOW[2] / 1920
         dbg = p.SHOP_SHELF.copy()
         for (x, y, w, h), color, label in annotations:
-            cv2.rectangle(dbg, (x, y), (x + w, y + h), color, 2)
-            cv2.putText(dbg, label, (x, max(y - 4, 10)),
+            ax, ay = round(x * comp), round(y * comp)
+            aw, ah = round(w * comp), round(h * comp)
+            cv2.rectangle(dbg, (ax, ay), (ax + aw, ay + ah), color, 2)
+            cv2.putText(dbg, label, (ax, max(ay - 4, 10)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA)
         cv2.imwrite(f"testing/shop_buy_{suffix}_{ts}.png", dbg)
 

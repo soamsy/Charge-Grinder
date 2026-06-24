@@ -311,6 +311,8 @@ class Locate(): # if inputing np.ndarray, convert to BGR first!
         image = cls._prepare_image(image, region).astype(np.uint8)
         template = cls._load_template(template, **kwargs).astype(np.uint8)
         template, image = cls._convert(template, image)
+        if template.shape[0] > image.shape[0] or template.shape[1] > image.shape[1]:
+            return 0.0
         min_val, max_val, _, _ = cv2.minMaxLoc(cv2.matchTemplate(image, template, method))
         return cls._normalize_conf(max_val, min_val, method)
 

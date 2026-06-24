@@ -214,12 +214,14 @@ def update_shelf():
     p.SHOP_TIERS_AVAILABLE = get_shop()
     print("SHOP_TIERS_AVAILABLE", p.SHOP_TIERS_AVAILABLE)
     _tier_colors = {1: (255, 80, 80), 2: (80, 255, 80), 3: (80, 80, 255), 4: (80, 255, 255)}
+    comp = p.WINDOW[2] / 1920
     dbg = p.SHOP_SHELF.copy()
     for tier, pts in p.SHOP_TIERS_AVAILABLE.items():
         color = _tier_colors.get(tier, (200, 200, 200))
         for (x, y) in pts:
-            cv2.rectangle(dbg, (x - 50, y - 50), (x + 50, y + 50), color, 2)
-            cv2.putText(dbg, f"t{tier}", (x - 14, y + 6),
+            ax, ay = round(x * comp), round(y * comp)
+            cv2.rectangle(dbg, (ax - 50, ay - 50), (ax + 50, ay + 50), color, 2)
+            cv2.putText(dbg, f"t{tier}", (ax - 14, ay + 6),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
     cv2.imwrite(f"testing/shelf_tiers_{time.time()}.png", dbg)
 

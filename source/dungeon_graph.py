@@ -5,8 +5,13 @@ from source.utils.utils import *
 priority        = {"Event": 0, "Normal": 52, "Miniboss": 67, "Risky": 87, "Focused": 77, "Unknown": 53}
 saikai_priority = {"Event": 0, "Normal": 52, "Miniboss": 47, "Risky": 66, "Focused": 63, "Unknown": 53}
 
-def _binary_locate_all(template_path, crop, rx, ry, bin_thresh=100, conf=0.8, dedup_px=30):
+def _binary_locate_all(template_path, crop, rx, ry, bin_thresh=100, conf=0.8, dedup_px=30, tmpl_comp=None):
     tmpl = cv2.imread(template_path)
+    if tmpl_comp is None:
+        tmpl_comp = p.WINDOW[2] / 1920
+    if tmpl_comp != 1:
+        tmpl = cv2.resize(tmpl, None, fx=tmpl_comp, fy=tmpl_comp, interpolation=cv2.INTER_AREA)
+        dedup_px = round(dedup_px * tmpl_comp)
     tmpl_gray = cv2.cvtColor(tmpl, cv2.COLOR_BGR2GRAY)
     _, tmpl_bin = cv2.threshold(tmpl_gray, bin_thresh, 255, cv2.THRESH_BINARY)
     crop_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
@@ -84,12 +89,23 @@ def print_graph(graph, types):
 
 
 def map_out_next_3_steps():
-    image = screenshot((0, 0, 1920, 1080))
+    raw = screenshot((0, 0, 1920, 1080))
+    # Normalize to 1920×1080 so all hardcoded coordinates and native-sized templates work
+    # regardless of actual window size.
+    if raw.shape[1] != 1920 or raw.shape[0] != 1080:
+        interp = cv2.INTER_AREA if raw.shape[1] > 1920 else cv2.INTER_LINEAR
+        image = cv2.resize(raw, (1920, 1080), interpolation=interp)
+    else:
+        image = raw
+    # Pass to get_conf calls to cancel _load_template's window-size scaling,
+    # since the image is already at 1920×1080.
+    native = 1920 / p.WINDOW[2]
+
     graph = defaultdict(list)
     types = {}
 
     ts = time.time()
-    # cv2.imwrite(f"testing/map3_full_{ts}.png", image)
+    cv2.imwrite(f"testing/map3_full_{ts}.png", image)
 
     # Step 0→1 connections (bus is always at level 0)
     STEP0_CONF = 0.78
@@ -99,8 +115,8 @@ def map_out_next_3_steps():
         ("_down",    (830, 530, 125, 115), -1),
     ]:
         crop = image[ry:ry+rh, rx:rx+rw]
-        # cv2.imwrite(f"testing/map3_step0_{pth_key}_{ts}.png", crop)
-        conf = Locate.get_conf(PTH[pth_key], image=crop)
+        cv2.imwrite(f"testing/map3_step0_{pth_key}_{ts}.png", crop)
+        conf = Locate.get_conf(PTH[pth_key], image=crop, comp=native)
         found = conf >= STEP0_CONF
         print(f"step0 {pth_key}: conf={conf:.3f} threshold={STEP0_CONF} found={found}")
         if found:
@@ -119,9 +135,9 @@ def map_out_next_3_steps():
         for (lvl_hi, lvl_lo), y_mid in level_y_mids.items():
             ry = y_mid - diag_h // 2
             crop = image[ry:ry+diag_h, rx:rx+diag_w]
-            up_conf   = LocateGray.get_conf(PTH["up"],   image=crop)
-            down_conf = LocateGray.get_conf(PTH["down"], image=crop)
-            # cv2.imwrite(f"testing/map3_diag_{src_step}to{dst_step}_hi{lvl_hi}lo{lvl_lo}_{ts}.png", crop)
+            up_conf   = LocateGray.get_conf(PTH["up"],   image=crop, comp=native)
+            down_conf = LocateGray.get_conf(PTH["down"], image=crop, comp=native)
+            cv2.imwrite(f"testing/map3_diag_{src_step}to{dst_step}_hi{lvl_hi}lo{lvl_lo}_{ts}.png", crop)
             print(f"diag {src_step}→{dst_step} lvl {lvl_hi}/{lvl_lo}: up={up_conf:.2f} down={down_conf:.2f}")
             if down_conf >= CONN_CONF and down_conf >= up_conf:
                 graph[(src_step, lvl_hi)].append((dst_step, lvl_lo))
@@ -139,8 +155,8 @@ def map_out_next_3_steps():
         for level, y_center in level_y_fwd.items():
             ry = y_center - fwd_h // 2
             crop = image[ry:ry+fwd_h, rx:rx+fwd_w]
-            conf = LocateGray.get_conf(PTH["forward"], image=crop)
-            # cv2.imwrite(f"testing/map3_fwd_{src_step}to{dst_step}_lvl{level}_{ts}.png", crop)
+            conf = LocateGray.get_conf(PTH["forward"], image=crop, comp=native)
+            cv2.imwrite(f"testing/map3_fwd_{src_step}to{dst_step}_lvl{level}_{ts}.png", crop)
             print(f"fwd {src_step}→{dst_step} lvl {level}: conf={conf:.2f}")
             if conf >= CONN_CONF:
                 graph[(src_step, level)].append((dst_step, level))
@@ -160,10 +176,10 @@ def map_out_next_3_steps():
         ("BrightCost", (990, 640, 930, 50), -1),
     ]:
         crop = image[ry:ry+rh, rx:rx+rw]
-        # debug_img = crop.copy()
+        debug_img = crop.copy()
         for x, y, w, h, score in _binary_locate_all(PTH[pth_key], crop, rx, ry,
                                                      bin_thresh=COIN_BIN_THRESH,
-                                                     conf=COIN_CONF):
+                                                     conf=COIN_CONF, tmpl_comp=1.0):
             lx, ly = x - rx, y - ry
             step_label = next((s for s, (lo, hi) in x_regions.items() if lo <= x < hi), None)
             if step_label is None:
@@ -174,19 +190,19 @@ def map_out_next_3_steps():
             node_type = "Fight" if centered else "Risky"
             print(f"  coin lvl {level} step {step_label} @ ({x},{y}) cx={coin_cx} offset={offset}: conf={score:.3f} → {node_type}")
             color = (0, 255, 0) if centered else (0, 165, 255)
-            # cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
-            # cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
+            cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
+            cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
             types[(step_label, level)] = node_type
-        # cv2.imwrite(f"testing/map3_coins_lvl{level}_{ts}.png", debug_img)
+        cv2.imwrite(f"testing/map3_coins_lvl{level}_{ts}.png", debug_img)
 
     # Step 3, level 0: UI occludes the top of the coin — use corner template instead.
     if types.get((3, 0)) == "Event":
         rx, ry, rw, rh = 1790, 360, 130, 38
         crop = image[ry:ry+rh, rx:rx+rw]
         hits = _binary_locate_all(PTH["CoinLeftCorner"], crop, rx, ry,
-                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF)
-        # debug_img = crop.copy()
+                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF, tmpl_comp=1.0)
+        debug_img = crop.copy()
         print(f"found hits {hits}")
         for x, y, w, h, score in hits:
             lx, ly = x - rx, y - ry
@@ -196,18 +212,18 @@ def map_out_next_3_steps():
             node_type = "Fight" if centered else "Risky"
             print(f"  corner coin step 3 lvl 0 @ ({x},{y}) cx={coin_cx} offset={offset}: conf={score:.3f} → {node_type}")
             color = (0, 255, 0) if centered else (0, 165, 255)
-            # cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
-            # cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
+            cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
+            cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
             types[(3, 0)] = node_type
-        # cv2.imwrite(f"testing/map3_coins_corner_s3l0_{ts}.png", debug_img)
+        cv2.imwrite(f"testing/map3_coins_corner_s3l0_{ts}.png", debug_img)
 
     if types.get((3, 1)) == "Event":
         rx, ry, rw, rh = 1760, 5, 160, 20
         crop = image[ry:ry+rh, rx:rx+rw]
         hits = _binary_locate_all(PTH["DarkLeftTopCost"], crop, rx, ry,
-                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF)
-        # debug_img = crop.copy()
+                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF, tmpl_comp=1.0)
+        debug_img = crop.copy()
         for x, y, w, h, score in hits:
             lx, ly = x - rx, y - ry
             coin_cx = x + w // 2 + 5
@@ -216,18 +232,18 @@ def map_out_next_3_steps():
             node_type = "Fight" if centered else "Risky"
             print(f"  corner coin step 3 lvl 1 @ ({x},{y}) cx={coin_cx} offset={offset}: conf={score:.3f} → {node_type}")
             color = (0, 255, 0) if centered else (0, 165, 255)
-            # cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
-            # cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
+            cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
+            cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
             types[(3, 1)] = node_type
-        # cv2.imwrite(f"testing/map3_coins_corner_s3l1_{ts}.png", debug_img)
+        cv2.imwrite(f"testing/map3_coins_corner_s3l1_{ts}.png", debug_img)
 
     if types.get((3, -1)) == "Event":
         rx, ry, rw, rh = 1760, 640, 160, 50
         crop = image[ry:ry+rh, rx:rx+rw]
         hits = _binary_locate_all(PTH["DarkLeftCornerCoin"], crop, rx, ry,
-                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF)
-        # debug_img = crop.copy()
+                                  bin_thresh=COIN_BIN_THRESH, conf=COIN_CONF, tmpl_comp=1.0)
+        debug_img = crop.copy()
         for x, y, w, h, score in hits:
             lx, ly = x - rx, y - ry
             coin_cx = x + w // 2 + 5
@@ -236,11 +252,11 @@ def map_out_next_3_steps():
             node_type = "Fight" if centered else "Risky"
             print(f"  corner coin step 3 lvl -1 @ ({x},{y}) cx={coin_cx} offset={offset}: conf={score:.3f} → {node_type}")
             color = (0, 255, 0) if centered else (0, 165, 255)
-            # cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
-            # cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
+            cv2.rectangle(debug_img, (lx, ly), (lx + w, ly + h), color, 1)
+            cv2.putText(debug_img, f"{score:.2f}", (lx, max(ly - 2, 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, color, 1, cv2.LINE_AA)
             types[(3, -1)] = node_type
-        # cv2.imwrite(f"testing/map3_coins_corner_s3l-1_{ts}.png", debug_img)
+        cv2.imwrite(f"testing/map3_coins_corner_s3l-1_{ts}.png", debug_img)
 
     print_graph(graph, types)
     return graph, types
