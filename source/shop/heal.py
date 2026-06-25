@@ -2,10 +2,9 @@ from source.utils.utils import *
 from source.shop.browse_shop import *
 
 def revive_idiots():
-    if p.is_saikai(): return
     revivals = min(p.DEAD, balance()//100)
     if revivals < 1: return
-    
+
     ClickAction((293, 705), ver="return").execute(click)
     for _ in range(revivals):
         if not wait_while_condition(lambda: now.button("return"), lambda: win_click(1545, 690), timer=3):
@@ -46,5 +45,6 @@ def heal_for_hard():
         heal_all()
 
 def heal_sinners():
+    if p.is_saikai(): return
     heal_for_hard()
     heal_more_for_extreme()
