@@ -85,7 +85,7 @@ def time_elapsed():
 def is_on_hard(level=None):
     lvl = level if level is not None else LVL
     if HARD_STATE == "normal4hard1":
-        return lvl >= (4 if is_saikai() else 5)
+        return lvl >= 5
     return HARD_STATE == "hard"
 
 def did_normal_then_hard():
