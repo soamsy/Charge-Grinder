@@ -19,6 +19,8 @@ def move():
 
     if p.is_on_hard():
         time.sleep(1.4) # node reveal animation
+    else:
+        time.sleep(0.3)
 
     if p.is_on_hard() and now.button("suicide"):
         return False
@@ -26,7 +28,7 @@ def move():
     print("move check")
     p.DEAD = len([gui.center(box) for box in LocateRGB.locate_all(PTH["0"], region=REG["alldead"], conf=0.9, threshold=40)])
     print(f"{p.DEAD} dead sinners")
-    if p.DEAD >= len(p.SELECTED):
+    if p.DEAD >= len(p.SELECTED)+1:
         gui.press("esc")
         time.sleep(0.5)
         chain_actions(click, [

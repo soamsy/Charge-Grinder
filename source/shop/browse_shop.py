@@ -169,10 +169,16 @@ def scan_up_entire_inventory_while_parsing(parse_area, location="fuse"):
     go_to_top_while_parsing(parse_area, location)
 
 def close_panel():
-    if now.button(p.SUPER): return
+    if now.button(p.SUPER):
+        print(f"already see {p.SUPER} so not closing") 
+        return
     gui.press("esc")
-    if not wait_while_condition(lambda: not now.button(p.SUPER), timer=1.0):
-        gui.press("esc")
+    def get_outta_there():
+        time.sleep(0.5)
+        win_click(1830, 840)
+    found_shop = wait_while_condition(lambda: not now.button(p.SUPER), get_outta_there, timer=2.0)
+    if not found_shop:
+        raise ValueError("Don't know what to do here. Can't close panel.")
     x, y = win_get_position()
     if x > 750 and y < 830:
         win_moveTo(x, 841)

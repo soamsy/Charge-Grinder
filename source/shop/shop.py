@@ -25,7 +25,7 @@ def buy(already_gained, missing, budget, buy_affinity_junk=False):
     gained = {1: 0, 2: 0, 3: 0, 4: 0}
     missing = missing.copy()
     if p.NUM_PURCHASED >= 4:
-        return gained, missing
+        return gained, missing, budget, []
     keywordless = [{"buy": [name for name, state in p.KEYWORDLESS.items() if state > 1], "sin": True}]
 
     ts = time.time()
@@ -272,6 +272,10 @@ def fuse_loop():
             break
         if has_all_fusions():
             break
+    print("Closing fuse panel")
+    close_panel()
+    print("Closing fuse panel again")
+    time.sleep(0.1)
     close_panel()
 
 def leave():
@@ -299,7 +303,9 @@ def invalidate_inventory():
 def should_skip():
     if p.FINISHED_ALL_FUSIONS and p.FINISHED_ALL_UPTIES:
         return True
+    print("p.FINISHED", p.FINISHED_ALL_FUSIONS, p.FINISHED_ALL_UPTIES)
     last_level = 5 + p.EXTREME*11
+    print("last_level", last_level)
     return p.SKIP and p.LVL >= last_level
 
 from pprint import pprint

@@ -167,7 +167,7 @@ def map_out_next_3_steps():
     x_regions    = {1: (990, 1190), 2: (1370, 1570), 3: (1760, 1920)}
     x_centers    = {s: (lo + hi) // 2 for s, (lo, hi) in x_regions.items()}
     CENTER_TOL   = 25
-    COIN_CONF    = 0.9
+    COIN_CONF    = 0.67
     COIN_BIN_THRESH = 80
 
     for pth_key, (rx, ry, rw, rh), level in [
@@ -292,7 +292,7 @@ def rank_paths(graph, types):
 def next_direction():
     graph, types = map_out_next_3_steps()
     paths = rank_paths(graph, types)
-    if not paths:
+    if not paths or len(paths[0]) <= 1 or len(paths[0][1]) <= 1:
         return "d", "Unknown"
 
     for cost, path in paths:

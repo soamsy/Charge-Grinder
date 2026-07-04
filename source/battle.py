@@ -185,12 +185,12 @@ def get_centroids_by_hue(image, hue, hue_threshold=3, opacity=0.8,
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     ts = time.time()
-    cv2.imwrite(f"testing/hue_debug_input_{hue}_{ts}.png", image)
-    cv2.imwrite(f"testing/hue_debug_mask_{hue}_{ts}.png", mask)
+    # cv2.imwrite(f"testing/hue_debug_input_{hue}_{ts}.png", image)
+    # cv2.imwrite(f"testing/hue_debug_mask_{hue}_{ts}.png", mask)
     hsv_vis = hsv.copy()
     hsv_vis[:, :, 1] = np.maximum(hsv_vis[:, :, 1], 255)
     hsv_vis[:, :, 2] = np.maximum(hsv_vis[:, :, 2], 255)
-    cv2.imwrite(f"testing/hue_debug_hsvmap_{hue}_{ts}.png", cv2.cvtColor(hsv_vis, cv2.COLOR_HSV2BGR))
+    # cv2.imwrite(f"testing/hue_debug_hsvmap_{hue}_{ts}.png", cv2.cvtColor(hsv_vis, cv2.COLOR_HSV2BGR))
     print(f"  mask nonzero pixels: {cv2.countNonZero(mask)}")
 
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
@@ -278,11 +278,13 @@ def select_team():
         return
     
     if now_rgb.button("arrow", conf=0.7):
-        win_moveTo(191, 475)
-        win_dragTo(289, 984, duration=1.0)
-        time.sleep(1)
+        for _ in range(2):
+            win_moveTo(191, 475)
+            time.sleep(0.1)
+            win_dragTo(289, 984, duration=1.0)
+            time.sleep(1)
 
-    for i in range(4):
+    for i in range(8):
         coords = [gui.center(box) for box in LocateGray.locate_all(PTH[f"{affinity}_team"], region=REG["teams"], threshold=15, conf=0.85)]
         sorted(coords, key=lambda coord: coord[1])
 
@@ -295,7 +297,8 @@ def select_team():
             if i != 0: gui.mouseUp()
             win_moveTo(196, 670)
             gui.mouseDown()
-            win_moveTo(193, 400)
+            time.sleep(0.2)
+            win_moveTo(193, 320)
             if i == 2: gui.mouseUp()
             time.sleep(0.3)
     else:
@@ -512,6 +515,8 @@ def fight(lux=False):
         # for lux with 6 sinners max
         if lux and now.button("TOBATTLE"): 
             select(p.SELECTED[:6])
+        if now.button("TOBATTLE"):
+            raise ValueError("Couldn't select sinners")
 
     print("Entered Battle")
     win_moveTo(1700, 750)
@@ -573,9 +578,9 @@ def fight(lux=False):
         if p.EXPECT_CHAIN:
             if gear_start:
                 gx, gy = gear_start
-                win_moveTo(max(10, gx-150), gy+120)
+                win_moveTo(gx+150, gy-170)
             else:
-                win_moveTo(300, 960)
+                win_moveTo(300, 730)
             p.EXPECT_CHAIN = False
 
         if now_rgb.button("event"):

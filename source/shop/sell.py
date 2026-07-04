@@ -12,6 +12,9 @@ def sell_unnecessary():
     sell_junk()
     print("Closing sell panel")
     close_panel()
+    print("Closing sell panel again")
+    time.sleep(0.1)
+    close_panel()
 
 # Function for later, it's not necessary right now
 # def sacrifice_fusion_material_for_uptie():

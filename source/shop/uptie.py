@@ -124,9 +124,7 @@ def are_upties_done():
             continue
         if name in owned_names and not name in p.UPTIE_SCHEDULED:
             print(f"Unexpected! {name} never got uptied")
-            p.UPTIE_SCHEDULED.add(name)
-            if name not in p.UPTIE_QUEUE:
-                p.UPTIE_QUEUE.append(name)
+            schedule_for_uptie(name)
 
         return False
     return True
