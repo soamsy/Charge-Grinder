@@ -23,7 +23,7 @@ def sell_unnecessary():
 def sell_junk():
     bottom_up_coord_list = allowed_coords()
     if bottom_up_coord_list:
-        sell(bottom_up_coord_list)
+        sell(bottom_up_coord_list[:1])
         get_inventory(location="sell")
         # bottom_up_coord_list = allowed_coords()
     if bottom_up_coord_list:

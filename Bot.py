@@ -391,6 +391,11 @@ def set_team(team, teams, keywordless):
     p.PICK_HARD = generate_packs_pr(teams[team]["priority_hard"])
     p.IGNORE_HARD = generate_packs_av(teams[team]["avoid_hard"])
     p.PICK_ALL_HARD = generate_packs_all(teams[team]["priority_hard"])
+    p.FINISHED_ALL_FUSIONS = False
+    p.FINISHED_ALL_UPTIES = False
+    p.UPTIE_QUEUE = []
+    p.UPTIE_INCOMPLETE_QUEUE = []
+    p.UPTIE_SCHEDULED = set()
 
     logging.info(f'Team: {p.TEAM[0]}')
     

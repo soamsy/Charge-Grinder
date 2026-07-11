@@ -119,12 +119,11 @@ def are_upties_done():
             for name, tier in uptie.items():
                 all_uptie_names.append(name)
     owned_names = [gift["name"] for gift in p.INVENTORY["have"].values() if "name" in gift]
+    count = 0
     for name in all_uptie_names:
         if name in p.UPTIE_SCHEDULED and not name in p.UPTIE_QUEUE and name not in p.UPTIE_INCOMPLETE_QUEUE:
-            continue
-        if name in owned_names and not name in p.UPTIE_SCHEDULED:
+            count += 1
+        elif name in owned_names and not name in p.UPTIE_SCHEDULED:
             print(f"Unexpected! {name} never got uptied")
             schedule_for_uptie(name)
-
-        return False
-    return True
+    return count == len(all_uptie_names)

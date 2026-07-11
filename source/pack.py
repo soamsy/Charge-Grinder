@@ -10,14 +10,6 @@ def within_region(x, regions):
         print("wtf", x, "is not in regions", regions)
         return None
 
-
-def remove_pack(level, name):
-    for l in range(level, 6 + p.EXTREME*10):
-        if name in p.PICK_NORMAL[f"floor{l}"]:
-            p.PICK_NORMAL[f"floor{l}"].remove(name)
-        if name in p.PICK_NORMAL[f"floor{l}"]:
-            p.PICK_HARD[f"floor{l}"].remove(name)
-
 def pack_sifter():
     region = (161, 630, 1632, 120)
     cv2.imwrite(f"testing/pack_{time.time()}_sifter.png", screenshot(region))
@@ -54,28 +46,24 @@ def pack_eval(regions, skip, skips):
             for pack in packs:
                 box = sift.locate(PTH[pack])
                 if box:
-                    x, _ = gui.center(box)
-                    region_id = within_region(x, regions)
-                    if region_id is not None:
-                        return pack, region_id
+                    x, y = gui.center(box)
+                    return pack, (x, y)
             time.sleep(0.10)
         return None, None
     
-    first_pack, region_id = locate_packs(first, 2)
+    first_pack, region = locate_packs(first, 2)
     if first_pack:
-        print("first_pack", first_pack, "region_id", region_id)
-        remove_pack(p.LVL, first_pack)
+        print("first_pack", first_pack, "region", region)
         logging.info(f"Pack: {first_pack}")
         print(f"Pack: {first_pack}")
-        return region_id
+        return region
     if skip != skips and priority:
         return None
-    second_pack, region_id = locate_packs(second, 2)
+    second_pack, region = locate_packs(second, 2)
     if second_pack:
-        remove_pack(p.LVL, second_pack)
         logging.info(f"Pack: {second_pack}")
         print(f"Pack: {second_pack}")
-        return region_id
+        return region
     if skip != skips and backup:
         return None
 
@@ -85,53 +73,49 @@ def pack_eval(regions, skip, skips):
         if len(packs.keys()) >= len(regions): break
         box = sift.locate(PTH[pack])
         if box:
-            x, _ = gui.center(box)
-            if (region_id := within_region(x, regions)) is not None \
-                and region_id not in packs.values():
-                    packs[pack] = region_id
+            x, y = gui.center(box)
+            packs[pack] = (x, y)
     
     logging.info(packs)
-    ordered_packs = list(sorted([(i, pack) for pack, i in packs.items()]))
-    in_order = [pack for _, pack in ordered_packs]
+    ordered_packs = list(sorted([(x, y, pack) for pack, (x, y) in packs.items()]))
+    in_order = [pack for x, y, pack in ordered_packs]
     print(in_order)
-    filtered = {pack: i for pack, i in packs.items() if pack not in banned}
+    filtered = {pack: region for pack, region in packs.items() if pack not in banned}
 
     if not filtered and skip != skips: 
         return None
-    elif not filtered:
+    else:
         print("Pick bad pack")
         if packs:
             name = random.choice(list(packs.keys()))
-            remove_pack(p.LVL, name)
             logging.info(f"Pack: {name}")
             return packs[name]
-        return 0
+        return (960, 540)
 
     # locating relevant ego gifts in floor rewards
-    ego_coords = [gui.center(box) for box in LocateRGB.locate_all(PTH[p.GIFTS[0]["checks"][1]])]
-    owned_x = [x + w for x, _, w, _ in LocateRGB.locate_all(PTH["OwnedSmall"])]
+    # ego_coords = [gui.center(box) for box in LocateRGB.locate_all(PTH[p.GIFTS[0]["checks"][1]])]
+    # owned_x = [x + w for x, _, w, _ in LocateRGB.locate_all(PTH["OwnedSmall"])]
 
-    # excluding owned ego gifts from evaluation
-    ego_coords = [
-        coord for coord in ego_coords
-        if all(abs(coord[0] - x) >= 25 for x in owned_x)
-    ]
+    # # excluding owned ego gifts from evaluation
+    # ego_coords = [
+    #     coord for coord in ego_coords
+    #     if all(abs(coord[0] - x) >= 25 for x in owned_x)
+    # ]
 
-    ids = sorted(filtered.values())
-    new_regions = [regions[i] for i in ids]
-    weight = {i: 0 for i in ids} # evaluating each floor based on ego gifts
-    for coord in ego_coords:
-        index = within_region(coord[0], new_regions)
-        if index is not None:
-            weight[ids[index]] += 1
+    # ids = sorted(filtered.values())
+    # new_regions = [regions[i] for i in ids]
+    # weight = {i: 0 for i in ids} # evaluating each floor based on ego gifts
+    # for coord in ego_coords:
+    #     index = within_region(coord[0], new_regions)
+    #     if index is not None:
+    #         weight[ids[index]] += 1
 
-    id = max(weight, key=weight.get)
-    name = next((pack for pack, i in filtered.items() if i == id), None)
+    # id = max(weight, key=weight.get)
+    # name = next((pack for pack, i in filtered.items() if i == id), None)
 
-    remove_pack(p.LVL, name)
-    print(f"Entering {name}")
-    logging.info(f"Pack: {name}")
-    return id
+    # print(f"Entering {name}")
+    # logging.info(f"Pack: {name}")
+    # return id
 
 
 def update_lvl(level):
@@ -199,15 +183,17 @@ def pack():
     skips = 1 + p.BUFF[2] + int(p.BUFF[2] > 0)
 
     for skip in range(skips + 1):
-        id = pack_eval(regions, skip, skips)
+        region = pack_eval(regions, skip, skips)
         # cv2.imwrite(f"choices/pack{int(time.time())}.png", screenshot()) # debugging
-        if not id is None:
-            region = regions[id]
-            x, y = (region[0] + (region[2] // 2), region[1] + (region[3] // 2))
-            x += random.randint(-40, 40)
-            y += random.randint(-100, 100)
+        if not region is None:
+            x, y = region
+            x += 15
+            y -= 300
+            x += random.randint(-30, 30)
+            y += random.randint(-70, 70)
             win_moveTo(x, y)
-            win_dragTo(x, y + 300, duration=0.61)
+            time.sleep(0.1)
+            win_dragTo(x, y + 400, duration=0.81)
             break
         if skip != skips:
             win_click(1617, 62, tsize=(240, 60))

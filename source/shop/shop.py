@@ -77,39 +77,41 @@ def buy(already_gained, missing, budget, buy_affinity_junk=False):
 
     # --- named gifts ---
     teams = keywordless + p.GIFTS
-    all_gifts_to_buy = [gift for team in teams for gift in team["buy"] if team["sin"]]
-    if p.INVENTORY["have"]:
-        known_to_have = [item["name"] for loc, item in p.INVENTORY["have"].items() if "name" in item]
-        all_gifts_to_buy = [gift for gift in all_gifts_to_buy if gift not in known_to_have]
-    print(f"  named gifts to look for: {all_gifts_to_buy}")
-    named_annotations = []
-    for team in teams:
-        if not team["sin"]:
-            continue
-        for gift in all_gifts_to_buy:
-            try:
-                box = LocateRGB.try_locate(PTH[gift], image=p.SHOP_SHELF, comp=0.75, conf=0.83)
-                x, y = gui.center(box)
-                bx, by, bw, bh = box
-                tier = find_tier(x, y)
-                if tier is None:
-                    print(f"  ? found {gift} at ({x},{y}) but couldn't determine tier")
-                    named_annotations.append(((bx, by, bw, bh), (0, 165, 255), f"{gift}:no-tier"))
-                    continue
-                cost = buy_cost[tier]
-                if budget < cost:
-                    print(f"  ✗ {gift} tier={tier} cost={cost} budget={budget} — too expensive")
-                    named_annotations.append(((bx, by, bw, bh), (0, 0, 255), f"{gift} t{tier} ${cost} NO$$"))
-                    want_but_cannot_buy(tier)
-                    continue
-                print(f"  ✓ buying {gift} tier={tier} cost={cost} at ({x},{y})")
-                named_annotations.append(((bx, by, bw, bh), (0, 255, 0), f"{gift} t{tier} ${cost}"))
-                _debug_shelf(f"before_{gift}", named_annotations)
-                click_and_purchase(tier, (x+809, y+300))
-                schedule_for_uptie(gift)
-            except gui.ImageNotFoundException:
-                print(f"  - {gift} not found on shelf")
-    _debug_shelf("named_gifts", named_annotations)
+    if p.REFRESH_COUNT != p.REFRESH_COUNT_ON_SIN_SEARCH:
+        p.REFRESH_COUNT_ON_SIN_SEARCH = p.REFRESH_COUNT
+        all_gifts_to_buy = [gift for team in teams for gift in team["buy"] if team["sin"]]
+        if p.INVENTORY["have"]:
+            known_to_have = [item["name"] for loc, item in p.INVENTORY["have"].items() if "name" in item]
+            all_gifts_to_buy = [gift for gift in all_gifts_to_buy if gift not in known_to_have]
+        print(f"  named gifts to look for: {all_gifts_to_buy}")
+        named_annotations = []
+        for team in teams:
+            if not team["sin"]:
+                continue
+            for gift in all_gifts_to_buy:
+                try:
+                    box = LocateRGB.try_locate(PTH[gift], image=p.SHOP_SHELF, comp=0.75, conf=0.83)
+                    x, y = gui.center(box)
+                    bx, by, bw, bh = box
+                    tier = find_tier(x, y)
+                    if tier is None:
+                        print(f"  ? found {gift} at ({x},{y}) but couldn't determine tier")
+                        named_annotations.append(((bx, by, bw, bh), (0, 165, 255), f"{gift}:no-tier"))
+                        continue
+                    cost = buy_cost[tier]
+                    if budget < cost:
+                        print(f"  ✗ {gift} tier={tier} cost={cost} budget={budget} — too expensive")
+                        named_annotations.append(((bx, by, bw, bh), (0, 0, 255), f"{gift} t{tier} ${cost} NO$$"))
+                        want_but_cannot_buy(tier)
+                        continue
+                    print(f"  ✓ buying {gift} tier={tier} cost={cost} at ({x},{y})")
+                    named_annotations.append(((bx, by, bw, bh), (0, 255, 0), f"{gift} t{tier} ${cost}"))
+                    _debug_shelf(f"before_{gift}", named_annotations)
+                    click_and_purchase(tier, (x+809, y+300))
+                    schedule_for_uptie(gift)
+                except gui.ImageNotFoundException:
+                    print(f"  - {gift} not found on shelf")
+        _debug_shelf("named_gifts", named_annotations)
 
     # --- affinity junk ---
     if buy_affinity_junk:
@@ -233,7 +235,7 @@ def buy_extra():
 
     did_refresh, budget = try_keyword_refresh(budget)
     if not did_refresh: return
-    if should_skip(): return
+    if should_stop(): return
 
     _, _, budget, _ = buy({}, {}, budget, buy_affinity_junk=True)
     if should_stop(): return
@@ -296,7 +298,7 @@ def invalidate_inventory():
     p.NEED_INVENTORY_CHECK = True
     p.NEED_BALANCE_CHECK = True
     p.REFRESH_COUNT = 0
-    p.REFRESH_COUNT = 0
+    p.REFRESH_COUNT_ON_SIN_SEARCH = -1
     p.NUM_PURCHASED = 0
     p.NUM_PURCHASED_SKILL3 = 0
 
@@ -328,6 +330,8 @@ def enter_shop():
             update_shelf()
             print("sell unnecessary")
             sell_unnecessary()
+            print("apply upties")
+            apply_upties()
             print("heal sinners")
             heal_sinners()
             print("update skill3")

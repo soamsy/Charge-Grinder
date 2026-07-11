@@ -242,13 +242,13 @@ def count_sinners(gear_start, gear_end):
     return count
 
 sins = {
-    "wrath"   : (0, 0.52, 4, 12, 250),
+    "wrath"   : (-1, 0.52, 4, 10, 250),
     "gloom"   : (96, 0.5, 5, 12, 250),
     "sloth"   : (23, 0.5, 5, 12, 250),
-    "lust"    : (13, 0.4, 5, 12, 250),
+    "lust"    : (13, 0.4, 5, 10, 250),
     "pride"   : (110, 0.5, 5, 13, 250),
     "gluttony": (41, 0.5, 5, 12, 250),
-    "envy"    : (140, 0.40, 6, 12, 250),
+    "envy"    : (140, 0.40, 5, 10, 250),
 }
 
 def find_skill3(background, sin="envy"):
