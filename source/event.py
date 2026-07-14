@@ -13,7 +13,7 @@ def event():
     print("event check")
     start_time = time.time()
     while True:
-        if time.time() - start_time > 100:
+        if time.time() - start_time > 20:
             return False
         if time.time() - start_time > 6:
             if now.button("pause"):
