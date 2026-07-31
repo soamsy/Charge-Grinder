@@ -277,11 +277,21 @@ def select_team():
     if not p.DUPLICATES and LocateGray.check(PTH[f"{affinity}_current"], region=REG["current_team"], conf=0.92, method=cv2.TM_SQDIFF_NORMED, wait=False):
         return
     
+    coords = [gui.center(box) for box in LocateGray.locate_all(PTH[f"{affinity}_team"], region=REG["teams"], threshold=15, conf=0.85)]
+    coords.sort(key=lambda coord: coord[1])
+    if len(coords) > 0:
+        print(f"clicking {coords}")
+        win_click(coords[0])
+        return
+    
     if now_rgb.button("arrow", conf=0.7):
         for _ in range(2):
             win_moveTo(191, 475)
-            time.sleep(0.1)
-            win_dragTo(289, 984, duration=1.0)
+            time.sleep(0.2)
+            gui.mouseDown()
+            time.sleep(0.03)
+            win_moveTo(289, 984)
+            gui.mouseUp()
             time.sleep(1)
 
     for i in range(8):
@@ -297,7 +307,7 @@ def select_team():
             if i != 0: gui.mouseUp()
             win_moveTo(196, 670)
             gui.mouseDown()
-            time.sleep(0.2)
+            time.sleep(0.05)
             win_moveTo(193, 320)
             if i == 2: gui.mouseUp()
             time.sleep(0.3)

@@ -92,7 +92,7 @@ def did_normal_then_hard():
     if not is_on_hard():
         return False
     if HARD_STATE == "normal4hard1":
-        return LVL >= 5
+        return LVL >= 4
     return False
     
 def is_saikai():
